@@ -21,7 +21,7 @@ public class Scenes : MonoBehaviour
     [MenuItem("Resident Evil/Import Model Test")]
     public static void ImportModelTest()
     {
-        var liv = Liv.fromEmd(1, 0x1E);
+        var liv = Liv.fromEmd(1, 0x4B);
     }
 
     [MenuItem("Resident Evil/Import Textures")]
@@ -39,7 +39,7 @@ public class Scenes : MonoBehaviour
     [MenuItem("Resident Evil/Import Texture Test")]
     public static void ImportTextureTest()
     {
-        Liv.fromTim(1, 0x1E);
+        Liv.fromTim(1, 0x4B);
     }
 
     //[MenuItem("Resident Evil/Import Models2")]

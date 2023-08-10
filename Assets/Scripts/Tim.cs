@@ -60,22 +60,26 @@ public class Tim // Texture import
 
         List<Color> colors = new List<Color>();
 
-        for (int i = wxh-1; i >= 0; --i)
+        //for (int i = wxh-1; i >= 0; --i)
+        //{
+        //    colors.Add(IntToColor(imgbuf[i]));
+        //}
+        for (int i = 0; i < wxh; ++i)
         {
             colors.Add(IntToColor(imgbuf[i]));
         }
         texture.SetPixels(0, 0, width, height, colors.ToArray());
-        for (int i = 0; i < height; i++)
-        {
-            for (int j = 0; j < width / 2; j++)
-            {
-                int end = width - 1 - j;
-                Color colortempFirst = texture.GetPixel(j, i);
-                Color colortempEnd = texture.GetPixel(end, i);
-                texture.SetPixel(j, i, colortempEnd);
-                texture.SetPixel(end, i, colortempFirst);
-            }
-        }
+        //for (int i = 0; i < height; i++)
+        //{
+        //    for (int j = 0; j < width / 2; j++)
+        //    {
+        //        int end = width - 1 - j;
+        //        Color colortempFirst = texture.GetPixel(j, i);
+        //        Color colortempEnd = texture.GetPixel(end, i);
+        //        texture.SetPixel(j, i, colortempEnd);
+        //        texture.SetPixel(end, i, colortempFirst);
+        //    }
+        //}
         texture.Apply();
         return texture;
 

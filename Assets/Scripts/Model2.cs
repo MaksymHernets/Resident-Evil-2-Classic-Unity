@@ -397,48 +397,82 @@ public class Model2
             Vector3Int param = GetTextureParams(buf.path);
 
             Dictionary<int,Vector2> uvs = new Dictionary<int, Vector2>();
+            int off_unit = param.x / param.z;
 
-            //int indexV = 0;
-            //foreach (var triangle in Triangles)
-            //{
-            //    if (!uvs.ContainsKey(triangle))
-            //    {
-            //        float u = (float)tex[indexV] / (float)param.x;
-            //        float v = (float)tex[indexV + 1] / (float)param.y;
-            //        uvs.Add(triangle, new Vector2(u, v));
-            //    }
-            //    ++indexV;
-            //    if (indexV % 12 == 3)
-            //    {
-            //        indexV = (((indexV - 3) / 12) + 1) * 12;
-            //    }
-            //}
-
-            for (int k = 0; k < index.Length/12; k++)
+            for (int k = 0; k < index.Length; k += 6)
             {
-                int ui = k * 12;
+                int ui = k * 2;
 
-                uv.Add(GetUV(param, ui ));
-                uv.Add(GetUV(param, ui + 4));
-                uv.Add(GetUV(param, ui + 8));
+                Vector2 x = GetUV(param, ui);
+
+                Vector2 y = GetUV(param, ui + 2);
+                Vector2 z = GetUV(param, ui + 4);
+
+                if (!uvs.ContainsKey(index[k + 1]))
+                {
+                    uvs.Add(index[k + 1], x);
+                }
+                //if (!uvs.ContainsKey(index[k + 3]))
+                //{
+                //    uvs.Add(index[k + 3], x);
+                //}
+                //if (!uvs.ContainsKey(index[k + 5]))
+                //{
+                //    uvs.Add(index[k + 5], x);
+                //}
             }
 
-            Vector2 GetUV(Vector3Int param, int ui)
+            for (int k = 0; k < index2.Length; k += 8)
             {
-                int off_unit = param.x / param.z;
-                int offx = off_unit * (tex[ui + 6] & 3);
-                float u = (float)(tex[ui] + offx) / (float)param.x;
-                float v = (float)tex[ui + 1] / (float)param.y;
+                int ui = k * 2;
+
+                Vector2 x = GetUV2(param, ui);
+
+                Vector2 y = GetUV2(param, ui + 2);
+                Vector2 z = GetUV2(param, ui + 4);
+                Vector2 q = GetUV2(param, ui + 6);
+
+                if (!uvs.ContainsKey(index2[k + 1]))
+                {
+                    uvs.Add(index2[k + 1], x);
+                }
+                if (!uvs.ContainsKey(index2[k + 3]))
+                {
+                    uvs.Add(index2[k + 3], x);
+                }
+                if (!uvs.ContainsKey(index2[k + 5]))
+                {
+                    uvs.Add(index2[k + 5], x);
+                }
+                if (!uvs.ContainsKey(index2[k + 7]))
+                {
+                    uvs.Add(index2[k + 7], x);
+                }
+            }
+
+            Vector2 GetUV(Vector3Int param, int uii)
+            {
+                int offx = off_unit * (tex[uii + 6] & 3);
+                float u = (float)(tex[uii] + offx) / (float)param.x;
+                float v = (float)(tex[uii + 1]) / (float)param.y;
                 return new Vector2(u, v);
             }
 
-            //ShowMesh.Show(vector3s.ToArray());
-
-            //uv = uvs.OrderBy(w => w.Key).Select(w=>w.Value).ToList();
-
-            if ( uv.Count < vector3s.Count)
+            Vector2 GetUV2(Vector3Int param, int uii)
             {
-                for (; uv.Count < vector3s.Count; )
+                int offx = off_unit * (tex2[uii + 6] & 3);
+                float u = (float)(tex2[uii] + offx) / (float)param.x;
+                float v = (float)(tex2[uii + 1]) / (float)param.y;
+                return new Vector2(u, v);
+            }
+
+            for (int iii = 0; iii < vector3s.Count; iii++)
+            {
+                if (uvs.ContainsKey(iii))
+                {
+                    uv.Add(uvs[iii]);
+                }
+                else
                 {
                     uv.Add(new Vector2());
                 }

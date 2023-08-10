@@ -21,20 +21,23 @@ public static class SaveData
 
             if (AssetDatabase.LoadAssetAtPath<Mesh>(path) != null)
             {
-                Mesh temp = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-                temp.subMeshCount = mesh.subMeshCount;
-                temp.vertices = mesh.vertices;
-                temp.normals = mesh.normals;
-                temp.uv = mesh.uv;
-                for (int i = 0; i < temp.subMeshCount; i++)
-                {
-                    temp.SetTriangles(mesh.GetTriangles(i), i);
-                }
-                //temp.uv = uv.ToArray();
+                AssetDatabase.DeleteAsset(path);
 
-                temp.RecalculateNormals();
-                temp.RecalculateBounds();
-                temp.Optimize();
+                AssetDatabase.CreateAsset(mesh, path);
+                //Mesh temp = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+                //temp.subMeshCount = mesh.subMeshCount;
+                //temp.vertices = mesh.vertices;
+                //temp.normals = mesh.normals;
+                //temp.uv = mesh.uv;
+                //for (int i = 0; i < temp.subMeshCount; i++)
+                //{
+                //    temp.SetTriangles(mesh.GetTriangles(i), i);
+                //}
+                ////temp.uv = uv.ToArray();
+
+                //temp.RecalculateNormals();
+                //temp.RecalculateBounds();
+                //temp.Optimize();
             }
             else
             {
@@ -44,11 +47,11 @@ public static class SaveData
         }
     }
 
-    public static void SaveTexture2D(Texture2D texture, int playId, string emdId)
+    public static void SaveTexture2D(Texture2D texture, int playId, string emdId, bool CreateMaterial = true)
     {
         string folderEM = CheckFolder(playId, emdId);
 
-        string path = folderEM + "/" + emdId + ".mesh";
+        string path = folderEM + "/" + emdId + ".asset";
 
         if (AssetDatabase.LoadAssetAtPath<Texture2D>(path) != null)
         {
@@ -67,6 +70,21 @@ public static class SaveData
         else
         {
             AssetDatabase.CreateAsset(texture, path);
+        }
+
+        Shader shader = Shader.Find("Standard (Specular setup)");
+        Material material = new Material(shader);
+        material.SetTexture("_MainTex", texture);
+        string pathMat = folderEM + "/" + emdId + ".mat";
+
+        if (AssetDatabase.LoadAssetAtPath<Material>(pathMat) != null)
+        {
+            Material temp = AssetDatabase.LoadAssetAtPath<Material>(pathMat);
+            temp.SetTexture("_MainTex", texture);
+        }
+        else
+        {
+            AssetDatabase.CreateAsset(material, pathMat);
         }
     }
 

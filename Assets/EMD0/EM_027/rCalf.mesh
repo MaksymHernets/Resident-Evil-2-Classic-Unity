@@ -35,7 +35,7 @@ Mesh:
   m_KeepVertices: 1
   m_KeepIndices: 1
   m_IndexFormat: 0
-  m_IndexBuffer: 000001000200000003000100040000000200030005000100040002000500030004000500
+  m_IndexBuffer: 040002000300040003000500000004000500000005000100020000000100020001000300
   m_VertexData:
     serializedVersion: 3
     m_VertexCount: 6
@@ -49,9 +49,17 @@ Mesh:
       format: 0
       dimension: 3
     - stream: 0
+      offset: 24
+      format: 0
+      dimension: 4
+    - stream: 0
       offset: 0
       format: 0
       dimension: 0
+    - stream: 0
+      offset: 40
+      format: 0
+      dimension: 2
     - stream: 0
       offset: 0
       format: 0
@@ -88,16 +96,8 @@ Mesh:
       offset: 0
       format: 0
       dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    m_DataSize: 144
-    _typelessdata: 00000080b81e85becccccc3e84b74b3d9caa75bf0bbb8d3ee17ab43f3d0a57be0ad7a3beb9d33c3d19807abfa8c44dbee17ab43f3d0a57be0ad7a33eef6e653d4898183e33bc7c3f00000080b81e85beccccccbee445883dfa7e18be52927cbf000000800ad7233d00000080b0fb3a3c2ac07a3f49f94d3ee17ab43f0ad7a33c000000803857343cb8f4753fcde58dbe
+    m_DataSize: 288
+    _typelessdata: 000000800ad7233d00000080b0fb3a3c2ac07a3f49f94d3e0000803f00000000000000000000803f0000803e0000e83ee17ab43f0ad7a33c000000803857343cb8f4753fcde58dbe0000803f00000000000000000000803f0000803e0000e83e00000080b81e85beccccccbee445883dfa7e18be52927cbf0000803f00000000000000000000803f0000803e0000d63ee17ab43f3d0a57be0ad7a3beb9d33c3d19807abfa8c44dbe0000803f00000000000000000000803f0000803e0000d63e00000080b81e85becccccc3e84b74b3d9caa75bf0bbb8d3e0000803f00000000000000000000803f0000803e0000d63ee17ab43f3d0a57be0ad7a33eef6e653d4898183e33bc7c3f0000803f00000000000000000000803f0000803e0000d63e
   m_CompressedMesh:
     m_Vertices:
       m_NumItems: 0
