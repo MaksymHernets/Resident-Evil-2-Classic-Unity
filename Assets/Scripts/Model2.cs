@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
@@ -349,8 +350,9 @@ public class Model2
             c = buf.Ulong(); 
             index2 = buildBufferUint16Array(buf, o, c, QUA_IDX_LEN); //Uint16Array
 
+            int[] tex2;
             o = buf.Ulong() + beginAt;
-            tex = buildBufferUint8Array(buf, o, c, QUA_TEX_LEN); //Uint8Array
+            tex2 = buildBufferUint8Array(buf, o, c, QUA_TEX_LEN); //Uint8Array
             //debug(' % Q end', i, qua.vertex.count, h4(qua.vertex.offset));
 
             offset += 56;
@@ -383,35 +385,68 @@ public class Model2
 
             for (int k = 0; k < index2.Length; k += 8)
             {
-                    Triangles.Add(index2[k + 1]);
-                    Triangles.Add(index2[k + 3]);
-                    Triangles.Add(index2[k + 7]);
+                Triangles.Add(index2[k + 1]);
+                Triangles.Add(index2[k + 3]);
+                Triangles.Add(index2[k + 7]);
                 
-                    Triangles.Add(index2[k + 1]);
-                    Triangles.Add(index2[k + 7]);
-                    Triangles.Add(index2[k + 5]);
+                Triangles.Add(index2[k + 1]);
+                Triangles.Add(index2[k + 7]);
+                Triangles.Add(index2[k + 5]);
             }
 
-            //var vi = 20;
-            //int nb_palettes = buf.getUint16(18, true);
-            //int width = Tim._width(2, buf.getUint16(vi + 8, true));
-            //int height = buf.getUint16(vi + 10, true);
+            Vector3Int param = GetTextureParams(buf.path);
 
-            //for (int k = 0; k < vector3s.Count; k++)
+            Dictionary<int,Vector2> uvs = new Dictionary<int, Vector2>();
+
+            //int indexV = 0;
+            //foreach (var triangle in Triangles)
             //{
-            //    int ui = i * 12;
-            //    int off_unit = width / nb_palettes;
-            //    int offx = off_unit * (tex[ui + 6] & 3);
-            //    int u = (tex[ui] + offx) / width;
-            //    int v = tex[ui+1] / height;
-            //    uv.Add(new Vector2(u, v));
+            //    if (!uvs.ContainsKey(triangle))
+            //    {
+            //        float u = (float)tex[indexV] / (float)param.x;
+            //        float v = (float)tex[indexV + 1] / (float)param.y;
+            //        uvs.Add(triangle, new Vector2(u, v));
+            //    }
+            //    ++indexV;
+            //    if (indexV % 12 == 3)
+            //    {
+            //        indexV = (((indexV - 3) / 12) + 1) * 12;
+            //    }
             //}
+
+            for (int k = 0; k < index.Length/12; k++)
+            {
+                int ui = k * 12;
+
+                uv.Add(GetUV(param, ui ));
+                uv.Add(GetUV(param, ui + 4));
+                uv.Add(GetUV(param, ui + 8));
+            }
+
+            Vector2 GetUV(Vector3Int param, int ui)
+            {
+                int off_unit = param.x / param.z;
+                int offx = off_unit * (tex[ui + 6] & 3);
+                float u = (float)(tex[ui] + offx) / (float)param.x;
+                float v = (float)tex[ui + 1] / (float)param.y;
+                return new Vector2(u, v);
+            }
 
             //ShowMesh.Show(vector3s.ToArray());
 
+            //uv = uvs.OrderBy(w => w.Key).Select(w=>w.Value).ToList();
+
+            if ( uv.Count < vector3s.Count)
+            {
+                for (; uv.Count < vector3s.Count; )
+                {
+                    uv.Add(new Vector2());
+                }
+            }
+
             mesh.vertices = vector3s.ToArray();
             if ( normals.Count <= vector3s.Count ) mesh.normals = normals.ToArray();
-
+            
             //if (max > vector3s.Count)
             //{
             //    Debug.LogWarning(i.ToString() + " " + buf.path);
@@ -421,12 +456,50 @@ public class Model2
             //mesh.SetTriangles(Triangles2, 1);
             //mesh.SetTriangles(Triangles3, 2);
 
-            //mesh.RecalculateNormals();
-            //mesh.RecalculateTangents();
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
+            mesh.SetUVs(0, uv.ToArray());
             meshObj.Add(mesh);
         }
 
         return meshObj.ToArray();
+    }
+
+    private static Vector3Int GetTextureParams(string path)
+    {
+        Vector3Int paras = new Vector3Int();
+        //DataView buf = default(DataView);
+        path = path.Remove(path.Length - 3, 3);
+        path += "TIM";
+        dataViewExt buf = File2.openDataView(path);
+
+        int type = (int)buf.getUint32(4, true);
+        int offset = (int)buf.getUint32(8, true);
+        int pal_x = buf.getUint16(12, true);
+        int pal_y = buf.getUint16(14, true);
+        int palette_colors = buf.getUint16(16, true);
+        int nb_palettes = buf.getUint16(18, true);
+        int vi = 20;
+
+        //console.debug('TIM palettes color', palette_colors, 'nb', nb_palettes, 
+        //'pal-x', pal_x, 'pal-y', pal_y, 'offset', offset);
+
+        // 调色板被纵向平均应用到图像上
+        List<List<int>> palettes = new List<List<int>>(nb_palettes);
+        for (int p = 0; p < nb_palettes; ++p)
+        {
+            //palettes[p] = new Uint16Array(buf.buffer, buf.byteOffset + vi, palette_colors);
+            palettes.Add(buildBufferUint16Array(buf, buf.byteOffset + vi, palette_colors, 1).ToList());
+            vi += palette_colors * 2;
+            // console.debug("Palette", p);
+            // h.printHex(palettes[p]);
+        }
+
+        paras.x = Tim._width(type, buf.getUint16(vi + 8, true)); // width
+        paras.y = buf.getUint16(vi + 10, true); // height
+        paras.z = buf.getUint16(18, true); // nb_palettes
+
+        return paras;
     }
 
     public static int[] buildBufferInt16Array(DataView buf, int offset, int count, int stride)

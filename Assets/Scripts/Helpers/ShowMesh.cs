@@ -30,6 +30,12 @@ public class ShowMesh : MonoBehaviour
         }
     }
 
+    [ContextMenu("SeeIn")]
+    private void SeeIn()
+    {
+        var t = mesh.uv;
+    }
+
     public static void Show(Vector3[] vertices)
     {
         foreach (var child in vertices)

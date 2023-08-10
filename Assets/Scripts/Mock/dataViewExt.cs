@@ -10,7 +10,7 @@ public class dataViewExt : DataView
     public int h_dir_size;
     public int h_dir_offset;
 
-    public dataViewExt(DataView v) : base(v.data)
+    public dataViewExt(DataView v) : base(v.buffer)
     {
         //this.v = v;
         pos = 0;

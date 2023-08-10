@@ -7,19 +7,30 @@ using UnityEngine.XR;
 
 public class DataView
 {
-    public byte[] data;
+    public byte[] buffer;
     public int byteLength;
+    public int byteOffset;
     public string path;
 
     public DataView(byte[] data)
     {
-        this.data = data;
+        this.buffer = data;
+        byteOffset = 0;
+    }
+
+    public UInt16 getUint4(int offset, bool littleEndian = true)
+    {
+        byte[] bytes = new byte[2];
+        bytes[0] = buffer[offset];
+        bytes[1] = 0;
+        if (littleEndian == false) bytes = Reverse(bytes);
+        return BitConverter.ToUInt16(bytes, 0);
     }
 
     public UInt16 getUint8(int offset, bool littleEndian = true)
     {
         byte[] bytes = new byte[2];
-        bytes[0] = data[offset];
+        bytes[0] = buffer[offset];
         bytes[1] = 0;
         if (littleEndian == false) bytes = Reverse(bytes);
         return BitConverter.ToUInt16(bytes, 0);
@@ -30,7 +41,7 @@ public class DataView
         byte[] bytes = new byte[2];
         for (int i = 0; i < bytes.Length; i++)
         {
-            bytes[i] = data[offset + i];
+            bytes[i] = buffer[offset + i];
         }
         if (littleEndian == false) bytes = Reverse(bytes);
         return BitConverter.ToUInt16(bytes, 0);
@@ -41,7 +52,7 @@ public class DataView
         byte[] bytes = new byte[3];
         for (int i = 0; i < bytes.Length; i++)
         {
-            bytes[i] = data[offset + i];
+            bytes[i] = buffer[offset + i];
         }
         if (littleEndian == false) bytes = Reverse(bytes);
         return BitConverter.ToUInt16(bytes, 0);
@@ -52,7 +63,7 @@ public class DataView
         byte[] bytes = new byte[4];
         for (int i = 0; i < bytes.Length; i++)
         {
-            bytes[i] = data[offset + i];
+            bytes[i] = buffer[offset + i];
         }
         if (littleEndian == false) bytes = Reverse(bytes);
         return BitConverter.ToUInt32(bytes, 0);
@@ -63,7 +74,7 @@ public class DataView
         byte[] bytes = new byte[1];
         for (int i = 0; i < bytes.Length; i++)
         {
-            bytes[i] = data[offset + i];
+            bytes[i] = buffer[offset + i];
         }
         if (littleEndian == false) bytes = Reverse(bytes);
         return BitConverter.ToInt16(bytes, 0);
@@ -74,7 +85,7 @@ public class DataView
         byte[] bytes = new byte[2];
         for (int i = 0; i < bytes.Length; i++)
         {
-            bytes[i] = data[offset + i];
+            bytes[i] = buffer[offset + i];
         }
         if (littleEndian == false) bytes = Reverse(bytes);
         return BitConverter.ToInt16(bytes, 0);
@@ -85,7 +96,7 @@ public class DataView
         byte[] bytes = new byte[4];
         for (int i = 0; i < bytes.Length; i++)
         {
-            bytes[i] = data[offset + i];
+            bytes[i] = buffer[offset + i];
         }
         if ( littleEndian == false) bytes = Reverse( bytes );
         return BitConverter.ToInt32(bytes, 0);
@@ -101,7 +112,7 @@ public class DataView
         //bytes[2] = 0;
         //bytes[3] = 0;
         //if (littleEndian == false) bytes = Reverse(bytes);
-        return Parse16BitFloat(data[offset], data[offset + 1]);
+        return Parse16BitFloat(buffer[offset], buffer[offset + 1]);
     }
 
     public float Parse16BitFloat(byte HI, byte LO)
@@ -202,6 +213,18 @@ public class DataView
         for (int i = begin; i < begin + length; i++)
         {
             array[j] = getUint8(i);
+            ++j;
+        }
+        return array;
+    }
+
+    public UInt16[] build_UInt4Array(DataView v, int begin, int length)
+    {
+        UInt16[] array = new UInt16[length];
+        int j = 0;
+        for (int i = begin; i < begin + length; i++)
+        {
+            array[j] = getUint4(i);
             ++j;
         }
         return array;

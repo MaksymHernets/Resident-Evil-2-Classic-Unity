@@ -20,6 +20,15 @@ public static class Liv
         return loadEmd(p, e);
     }
 
+    public static void fromTim(int playId, int emdId)
+    {
+        var e = toString(emdId, 16);
+
+        var p = playId == 0 ? 1 : 0;
+        //if (emdId < 0x10) throw new Error("bad emd id");
+        loadTim(p, e);
+    }
+
     private static string toString(int value, int rank)
     {
         if (rank == 16)
@@ -27,6 +36,22 @@ public static class Liv
             return value.ToString("X");
         }
         return "";
+    }
+
+    public static void loadTim(int playId, string emdId)
+    {
+        string key = "PL" + playId + "/EMD" + playId + "/EM" + playId + emdId;
+        string texfile = key + ".TIM";
+
+        if (File.Exists("Assets/" + texfile) == false) return;
+
+        Texture2D tex = Tim.parseStream(File2.openDataView(texfile));
+
+        SaveData.SaveTexture2D(tex, playId, emdId);
+
+        //Living thiz = new Living(mod, tex);
+        //thiz.texfile = texfile;
+        //return thiz;
     }
 
     public static Living loadEmd(int playId, string emdId)
@@ -42,11 +67,13 @@ public static class Liv
 
         SaveData.SaveMD(mod, playId, emdId);
 
-        Texture tex = Tim.parseStream(File2.openDataView(texfile));
+        //Texture2D tex = Tim.parseStream(File2.openDataView(texfile));
 
-        Living thiz = new Living(mod, tex);
+        //SaveData.SaveTexture2D(tex, playId, emdId);
+
+        //Living thiz = new Living(mod, tex);
         //thiz.texfile = texfile;
-        return thiz;
+        return default(Living);
     }
 }
 public class Living

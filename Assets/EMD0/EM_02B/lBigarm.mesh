@@ -57,9 +57,9 @@ Mesh:
       format: 0
       dimension: 0
     - stream: 0
-      offset: 0
+      offset: 24
       format: 0
-      dimension: 0
+      dimension: 2
     - stream: 0
       offset: 0
       format: 0
@@ -96,8 +96,8 @@ Mesh:
       offset: 0
       format: 0
       dimension: 0
-    m_DataSize: 288
-    _typelessdata: cccc4c3d0ad723bd3d0a173fd743d33d6aad053d467f7e3fae47213f8fc2753e8fc235bf89b4113f0317293e90334ebf8fc2f53d1e852b3f9999193e2cb42c3ee405723f45c88e3e666626bff528dc3ee17a14bf2ce856bf4370f03ef2f98bbea3707dbf0ad7e3bf666626bfa25873bf48bff03d782593be703d8a3ef528fcbfb81e45bf422c573f865e5cbee991febe999999beae4711c08fc2f53ea950e33ebc927fbd48d4643fccccccbd000080c0f528dcbefc44643f14e3a8be5eb99ebe6666e6beb81e55c0703d0a3f3604acbe2085543e6f316b3f8fc295bf8fc275c00ad7a3be8bf85bbf896be2bd8ab7ffbed7a330bf14aea7c0295c8f3f2d98023ecb0a3b3e1291793feb5178bfae47e9c0cdccac3f9c6d35be3a093cbf99b127bf
+    m_DataSize: 384
+    _typelessdata: cccc4c3d0ad723bd3d0a173fd743d33d6aad053d467f7e3fabaa923e0000613fae47213f8fc2753e8fc235bf89b4113f0317293e90334ebfabaa163f00006a3f8fc2f53d1e852b3f9999193e2cb42c3ee405723f45c88e3e5555a53e0000613f666626bff528dc3ee17a14bf2ce856bf4370f03ef2f98bbeabaa1e3f0000613fa3707dbf0ad7e3bf666626bfa25873bf48bff03d782593beabaa8a3e00005c3f703d8a3ef528fcbfb81e45bf422c573f865e5cbee991febe00001c3f0000413f999999beae4711c08fc2f53ea950e33ebc927fbd48d4643f5555993e00003f3fccccccbd000080c0f528dcbefc44643f14e3a8be5eb99ebeabaa8a3e00005c3f6666e6beb81e55c0703d0a3f3604acbe2085543e6f316b3fabaa9a3e0000613f8fc295bf8fc275c00ad7a3be8bf85bbf896be2bd8ab7ffbeabaa823e00006a3fd7a330bf14aea7c0295c8f3f2d98023ecb0a3b3e1291793fabaa923e00003d3feb5178bfae47e9c0cdccac3f9c6d35be3a093cbf99b127bf5555253f00007a3f
   m_CompressedMesh:
     m_Vertices:
       m_NumItems: 0

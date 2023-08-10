@@ -18,13 +18,31 @@ public class Scenes : MonoBehaviour
         }
     }
 
-    [MenuItem("Resident Evil/Import Models3")]
-    public static void Bad3()
+    [MenuItem("Resident Evil/Import Model Test")]
+    public static void ImportModelTest()
     {
-        var liv = Liv.fromEmd(0, 0x1E);
+        var liv = Liv.fromEmd(1, 0x1E);
     }
 
-    [MenuItem("Resident Evil/Import Models2")]
+    [MenuItem("Resident Evil/Import Textures")]
+    public static void ImportTextures()
+    {
+        int startId = 30;
+        int endId = 89;
+        for (int i = startId; i <= endId; i++)
+        {
+            Liv.fromTim(0, i);
+            Liv.fromTim(1, i);
+        }
+    }
+
+    [MenuItem("Resident Evil/Import Texture Test")]
+    public static void ImportTextureTest()
+    {
+        Liv.fromTim(1, 0x1E);
+    }
+
+    //[MenuItem("Resident Evil/Import Models2")]
     public static void begin_level()
     {
         // 游戏参数初始化
