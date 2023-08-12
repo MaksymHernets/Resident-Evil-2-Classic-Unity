@@ -8,17 +8,24 @@ public class MD
     public group[] pose;
         // 骨骼绑定状态
     public List<SkeletonBone> bone;
-        // 用于传输数据到着色器, 最多 20 块骨头层级, 每个骨头 4个偏移4个旋转
+    public int[] boneIdx;
+    // 用于传输数据到着色器, 最多 20 块骨头层级, 每个骨头 4个偏移4个旋转
     public float[] bind_bone;
         // 使用模型的高度作为与地平线零点的偏移
     public int height = 0;
         // 动作分组索引, 偶数是开始索引, 奇数是长度
-    public Stack<int> pose_group;
+    public Dictionary<int, int> pose_group;
+
+    public Texture2D tex;
+
+    public int playId;
+    public string emdId;
+    public string path;
 
     public MD()
     {
         this.pose = new group[100];
-        this.bone = new List<SkeletonBone>(15);
+        this.bone = new List<SkeletonBone>(30);
         this.bind_bone = new float[20 * 8];
         this.height = 0;
         //this.pose_group = [];
@@ -28,15 +35,15 @@ public class MD
     // anim_set 是个二维数组[动作索引][帧索引], 值是对骨骼状态的索引
     // get_frame_data(骨骼状态的索引) 可以返回该动作帧上的的全部骨骼数据.
     //
-    public void addAnimSet(group[] anim_set, int get_frame_data)
+    public void addAnimSet(group[] anim_set,Event get_frame_data)
     {
-        //var pi = this.pose.Length;
+        var pi = this.pose.Length;
         this.pose = new group[anim_set.Length];
-        //this.pose_group.Push({ at: pi, len: anim_set.Length });
+        this.pose_group.Add(pi, anim_set.Length ); //Push at: pi, len: anim_set.Length
         for (var i = 0; i < anim_set.Length; ++i)
         {
             this.pose[i] = anim_set[i];
-            //this.pose[pi + i].get_frame_data = get_frame_data;
+            this.pose[pi + i].get_frame_data = get_frame_data;
         }
     }
 
@@ -62,9 +69,9 @@ public class MD
         return this.pose.Length;
     }
 
-    public void transformRoot(int alf, Sprite[] sprites, int count)
+    public void transformRoot(AngleLinearFrame alf, Sprite[] sprites, int count)
     {
-        // this.bone[0].transform2(this.bind_bone, alf, sprites, count);
+        this.bone[0].transform2(this.bind_bone, alf, sprites, count);
         var rootBone = this.bone[0];
         // const zeropos = rootBone._pos;
         // const m4 = mat4.create();
@@ -96,11 +103,6 @@ public class MD
         return index;
     }
 
-    //public int getPose(int poseid)
-    //{
-    //    return this.pose[poseid];
-    //}
-
     public void combinationDraw(int boneIdx, bool drawable)
     {
         //this.bone[boneIdx].combination = drawable;
@@ -108,7 +110,7 @@ public class MD
 
     public int getHeight()
     {
-        // console.log(this.height)
+        console.log(this.height.ToString());
         return this.height;
     }
 }

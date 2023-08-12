@@ -16,4 +16,19 @@ public static class console
     {
         Debug.LogWarning(message + message2 + message3);
     }
+
+    public static void log(string message)
+    {
+        Debug.Log(message);
+    }
+
+    public static void debug(string message)
+    {
+        Debug.Log(message);
+    }
+
+    public static void debug(string message, string message1)
+    {
+        Debug.Log(message + message1);
+    }
 }

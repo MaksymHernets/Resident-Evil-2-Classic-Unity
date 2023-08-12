@@ -1,32 +1,39 @@
-﻿using UnityEngine.Windows;
+﻿using System;
+using UnityEngine.Windows;
 
 public class File2
 {
-    bool LITTLE_ENDIAN = true;
-    bool BIG_ENDIAN  = false;
-    bool defaultEndian = true;
+    //bool LITTLE_ENDIAN = true;
+    //bool BIG_ENDIAN  = false;
+    //bool defaultEndian = true;
 
-    //public void open(file, isAbsolute)
-    //{
-    //    if (!isAbsolute) file = pwd + file;
-    //    try
-    //    {
-    //        const size = fs.fileSize(file);
-    //        const buf = new ArrayBuffer(size);
-    //        let fd = fs.open(file, 'rb');
-    //        fs.read(fd, buf, 0, size, 0);
-    //        fs.close(fd);
+    public static dataViewExt open(string file, bool isAbsolute = true)
+    {
+        byte[] buf = File.ReadAllBytes("Assets/" + file);
+        //int fd = fs.open(file, 'rb');
+        //fs.read(fd, buf, 0, size, 0);
+        //fs.close(fd);
 
-    //        return {
-    //            buf, 
-    //  size, 
-    //};
-    //    }
-    //    catch (e)
-    //    {
-    //        throw new Error("open file " + file + "," + e.message);
-    //    }
-    //}
+        //return { buf, size, };
+
+        DataView dataView = new DataView(buf);
+        dataView.path = file;
+        dataViewExt dataViewExt = new dataViewExt(dataView);
+        dataViewExt.path = file;
+        return dataViewExt;
+
+        //if (!isAbsolute) file = pwd + file;
+        try
+        {
+            //int size = fs.fileSize(file);
+            //byte[] buf = new ArrayBuffer(size);
+            
+        }
+        catch (Exception e)
+        {
+            //throw new Error("open file " + file + "," + e.message);
+        }
+    }
 
     public static dataViewExt openDataView(string file)
     {

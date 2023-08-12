@@ -8,14 +8,27 @@ using UnityEngine.XR;
 public class DataView
 {
     public byte[] buffer;
-    public int byteLength;
-    public int byteOffset;
+    public int byteLength = 0;
+    public int byteOffset = 0;
     public string path;
 
     public DataView(byte[] data)
     {
         this.buffer = data;
         byteOffset = 0;
+    }
+
+    public DataView(byte[] data, int offset)
+    {
+        this.buffer = data;
+        byteOffset = offset;
+    }
+
+    public DataView(byte[] data, int offset, int len)
+    {
+        this.buffer = data;
+        byteOffset = offset;
+        byteLength = len;
     }
 
     public UInt16 getUint4(int offset, bool littleEndian = true)

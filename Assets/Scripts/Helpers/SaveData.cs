@@ -5,53 +5,61 @@ using UnityEngine;
 
 public static class SaveData
 {
-    public static void SaveMD(MD mod, int playId, string emdId)
+    public static void SaveMD(MD mod, string key, bool IsRecreateAsset = true)
     {
         int index = 0;
-        foreach (var mesh in mod.meshs)
+        foreach (Mesh mesh in mod.meshs)
         {
-            string folderEM = CheckFolder(playId, emdId);
-
             string namePart = Enum.GetName(typeof(person), (person)index);
             if (string.IsNullOrEmpty(namePart))
             {
                 namePart = UnityEngine.Random.Range(0, 10).ToString();
             }
-            string path = folderEM + "/" + namePart + ".mesh";
+            string path =  key + "/" + namePart + ".mesh";
 
-            if (AssetDatabase.LoadAssetAtPath<Mesh>(path) != null)
+            SaveData.SaveMesh(mesh, path, IsRecreateAsset);
+            index++;
+        }
+    }
+    public static void SaveMesh(Mesh mesh, string path, bool IsRecreateAsset = true)
+    {
+        if (AssetDatabase.LoadAssetAtPath<Mesh>(path) != null)
+        {
+            if ( IsRecreateAsset == true) 
             {
                 AssetDatabase.DeleteAsset(path);
-
                 AssetDatabase.CreateAsset(mesh, path);
-                //Mesh temp = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-                //temp.subMeshCount = mesh.subMeshCount;
-                //temp.vertices = mesh.vertices;
-                //temp.normals = mesh.normals;
-                //temp.uv = mesh.uv;
-                //for (int i = 0; i < temp.subMeshCount; i++)
-                //{
-                //    temp.SetTriangles(mesh.GetTriangles(i), i);
-                //}
-                ////temp.uv = uv.ToArray();
-
-                //temp.RecalculateNormals();
-                //temp.RecalculateBounds();
-                //temp.Optimize();
             }
             else
             {
-                AssetDatabase.CreateAsset(mesh, path);
+                Mesh temp = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+                temp.subMeshCount = mesh.subMeshCount;
+                temp.vertices = mesh.vertices;
+                temp.normals = mesh.normals;
+                temp.uv = mesh.uv;
+                temp.uv2 = mesh.uv2;
+                for (int i = 0; i < temp.subMeshCount; i++)
+                {
+                    temp.SetTriangles(mesh.GetTriangles(i), i);
+                }
+
+                temp.RecalculateNormals();
+                temp.RecalculateBounds();
+                temp.Optimize();
+                AssetDatabase.SaveAssetIfDirty(temp);
             }
-            ++index;
+        }
+        else
+        {
+            AssetDatabase.CreateAsset(mesh, path);
         }
     }
 
-    public static void SaveTexture2D(Texture2D texture, int playId, string emdId, bool CreateMaterial = true)
+    public static void SaveTexture2D(Texture2D texture, string path, bool CreateMaterial = true)
     {
-        string folderEM = CheckFolder(playId, emdId);
+        //string folderEM = CheckFolder(playId, emdId);
 
-        string path = folderEM + "/" + emdId + ".asset";
+        string pathTex = path + ".asset";
 
         if (AssetDatabase.LoadAssetAtPath<Texture2D>(path) != null)
         {
@@ -75,12 +83,14 @@ public static class SaveData
         Shader shader = Shader.Find("Standard (Specular setup)");
         Material material = new Material(shader);
         material.SetTexture("_MainTex", texture);
-        string pathMat = folderEM + "/" + emdId + ".mat";
+        string pathMat = path + ".mat";
 
         if (AssetDatabase.LoadAssetAtPath<Material>(pathMat) != null)
         {
             Material temp = AssetDatabase.LoadAssetAtPath<Material>(pathMat);
+            temp.shader = shader;
             temp.SetTexture("_MainTex", texture);
+            AssetDatabase.SaveAssetIfDirty(temp);
         }
         else
         {
@@ -88,7 +98,7 @@ public static class SaveData
         }
     }
 
-    private static string CheckFolder(int playId, string emdId)
+    private static string CheckFolderEMD(int playId, string emdId)
     {
         string folderEMD = "Assets/EMD" + playId;
         if (AssetDatabase.IsValidFolder(folderEMD) == false)
@@ -99,6 +109,21 @@ public static class SaveData
         if (AssetDatabase.IsValidFolder(folderEM) == false)
         {
             AssetDatabase.CreateFolder(folderEMD, "EM_" + playId + emdId);
+        }
+        return folderEM;
+    }
+
+    public static string CheckFolderPLS(int playId, string emdId)
+    {
+        string folderEMD = "Assets/PLD" + playId;
+        if (AssetDatabase.IsValidFolder(folderEMD) == false)
+        {
+            AssetDatabase.CreateFolder("Assets", "PLD" + playId);
+        }
+        string folderEM = folderEMD + "/PL" + emdId;
+        if (AssetDatabase.IsValidFolder(folderEM) == false)
+        {
+            AssetDatabase.CreateFolder(folderEMD, "PL" + emdId);
         }
         return folderEM;
     }

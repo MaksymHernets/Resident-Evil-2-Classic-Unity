@@ -2,46 +2,11 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.PackageManager.UI;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 public class Scenes : MonoBehaviour
 {
-    [MenuItem("Resident Evil/Import Models")]
-    public static void ImportModels()
-    {
-        int startId = 30;
-        int endId = 89;
-        for (int i = startId; i <= endId; i++)
-        {
-            Liv.fromEmd(0, i);
-            Liv.fromEmd(1, i);
-        }
-    }
-
-    [MenuItem("Resident Evil/Import Model Test")]
-    public static void ImportModelTest()
-    {
-        var liv = Liv.fromEmd(1, 0x4B);
-    }
-
-    [MenuItem("Resident Evil/Import Textures")]
-    public static void ImportTextures()
-    {
-        int startId = 30;
-        int endId = 89;
-        for (int i = startId; i <= endId; i++)
-        {
-            Liv.fromTim(0, i);
-            Liv.fromTim(1, i);
-        }
-    }
-
-    [MenuItem("Resident Evil/Import Texture Test")]
-    public static void ImportTextureTest()
-    {
-        Liv.fromTim(1, 0x4B);
-    }
-
     //[MenuItem("Resident Evil/Import Models2")]
     public static void begin_level()
     {
@@ -104,5 +69,27 @@ public class Scenes : MonoBehaviour
     private void Start()
     {
         begin_level();
+    }
+
+    public void load_map()
+    {
+        //free_map();
+        //map_data = Rdt.from(stage, room_nm, play_mode);
+        //map_path.setAllWeights(-1);
+        //build_road();
+        //build_collisions();
+        //build_floors_se();
+
+        //try
+        //{
+            //Tool.debug("0----------------------- Start init script");
+            //gameState.script_running = true;
+            //map_data.init_script.run(gameState);
+            //Tool.debug("0----------------------- script end");
+        //}
+        //catch (e)
+        //{
+        //    console.error(e.stack);
+        //}
     }
 }

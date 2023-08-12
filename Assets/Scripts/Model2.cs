@@ -2,11 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.XR;
 
 public class Model2
 {
@@ -36,8 +32,31 @@ public class Model2
         if (am_idx != null && am_idx.Length != 0) skeleton(md, am_idx, buf, buf._offset(6));
 
         md.meshs = mesh(buf, buf._offset(7));
-        BoneNm.bind(file, md);
+        //BoneNm.bind(file, md);
         //debug("Anim Group", md.pose_group.Count.ToString());
+        return md;
+    }
+
+    public static MD pld(string file)
+    {
+        dataViewExt buf = _open(file);
+        MD md = new MD();
+
+        group[] am_idx = animation(buf, buf._offset(0));
+        if (am_idx != null && am_idx.Length != 0) skeleton(md, am_idx, buf, buf._offset(1));
+
+        md.meshs = mesh(buf, buf._offset(2));
+
+        DataView timbuf = new DataView(buf.buffer, buf._offset(3));
+        //md.tex = Tim.parseStream(timbuf);
+        return md;
+    }
+
+    public static MD rbj(dataViewExt buf, int sk_off, int anim_off)
+    {
+        MD md = new MD();
+        group[] am_idx = animation(buf, anim_off);
+        skeleton(md, am_idx, buf, sk_off);
         return md;
     }
 
@@ -51,8 +70,6 @@ public class Model2
         //buf._offset = offset(0);
         debug(file, "DIR", buf.h_dir_offset.ToString(), buf.h_dir_offset.ToString());
         return buf;
-
-        
     }
 
     public static group[] animation(dataViewExt buf, int am_off)
@@ -68,14 +85,14 @@ public class Model2
             return null;
         }
 
-        //const am_idx = [];
+        int[] am_idx;
         group[] groups = new group[1];
 
         for (var i = 0; i < total; ++i)
         {
             var ec = buf.Ushort(am_off + i * 4);
             var offset = buf.Ushort();
-            //var group = am_idx[i] = [];
+            //var group = am_idx[i];
             groups = new group[ec];
             buf.setpos(am_off + offset);
             debug(" >", i.ToString(), ec.ToString(), (am_off + offset).ToString());
@@ -116,16 +133,16 @@ public class Model2
 
         if (ref_val > 0)
         {
-            __bone_bind(md, count, xyoff, ref_offset, buf);
+            //__bone_bind(md, count, xyoff, ref_offset, buf);
         }
 
         //
         // 生化危机用的是关节骨骼模型, 有一个整体的 xyz 偏移和每个关节的角度.
         // 一个关节的转动会牵连子关节的运动
         //
-        var get_frame_data = create_anim_frame_data(buf, anim_offset, size);
+        //var get_frame_data = create_anim_frame_data(buf, anim_offset, size);
 
-        md.addAnimSet(am_idx, get_frame_data);
+        //md.addAnimSet(am_idx, get_frame_data);
         debug(" * POSE count", md.pose.Length.ToString());
     }
 
@@ -134,7 +151,7 @@ public class Model2
         // 复用骨骼
         List<SkeletonBone> bone = md.bone;
         //const bind = { };
-        int[] bind = new int[count];
+        List<SkeletonBone> bind = new List<SkeletonBone>(count);
         int miny = 99999, maxy = 0;
 
         for (int i = 0; i < count; ++i)
@@ -164,16 +181,16 @@ public class Model2
             for (var m = 0; m < num_mesh; ++m)
             {
                 var chref = buf.Byte(ch_offset + m);
-                //sk.child.push(chref);
-                //bind[chref] = bone[i];
+                sk.child.Add(chref); //push
+                bind[chref] = bone[i];
             }
             debug(" ** ", i.ToString(), sk.ToString());
         }
 
         for (var i=0; i<count; ++i) {
-            if (bind[i] == 0) {
-                //bone[i].parent = bind[i];
-                //bind[i].child.push(bone[i]);
+            if (bind[i] == null) {
+                bone[i].parent = bind[i];
+                bind[i].child.Add(bone[i]); // push
                 debug(bone[i].toString());
             }
         }
@@ -190,7 +207,7 @@ public class Model2
         // const skdata     = { angle: [] };
         float angle_fn   = Mathf.Rad2Deg; // radian & degrees
         sk[] sk_cache;
-        // let curr_sk_idx  = -1;
+        var curr_sk_idx  = -1;
 
         if (angle_size <= 0)
         {
@@ -293,9 +310,6 @@ public class Model2
         List<Vector3> vector3s = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();
         List<int> Triangles = new List<int>();
-        List<int> Triangles2 = new List<int>();
-        List<int> Triangles3 = new List<int>();
-        List<Vector2> uv = new List<Vector2>();
 
         int length    = buf.Ulong(offset);
         int uk        = buf.Ulong(offset + 4);
@@ -360,9 +374,6 @@ public class Model2
             vector3s.Clear();
             normals.Clear();
             Triangles.Clear();
-            Triangles2.Clear();
-            Triangles3.Clear();
-            uv.Clear();
 
             for (int k = 0; k < vertex.Length; k += 4)
             {
@@ -394,109 +405,103 @@ public class Model2
                 Triangles.Add(index2[k + 5]);
             }
 
-            Vector3Int param = GetTextureParams(buf.path);
-
-            Dictionary<int,Vector2> uvs = new Dictionary<int, Vector2>();
-            int off_unit = param.x / param.z;
-
-            for (int k = 0; k < index.Length; k += 6)
-            {
-                int ui = k * 2;
-
-                Vector2 x = GetUV(param, ui);
-
-                Vector2 y = GetUV(param, ui + 2);
-                Vector2 z = GetUV(param, ui + 4);
-
-                if (!uvs.ContainsKey(index[k + 1]))
-                {
-                    uvs.Add(index[k + 1], x);
-                }
-                //if (!uvs.ContainsKey(index[k + 3]))
-                //{
-                //    uvs.Add(index[k + 3], x);
-                //}
-                //if (!uvs.ContainsKey(index[k + 5]))
-                //{
-                //    uvs.Add(index[k + 5], x);
-                //}
-            }
-
-            for (int k = 0; k < index2.Length; k += 8)
-            {
-                int ui = k * 2;
-
-                Vector2 x = GetUV2(param, ui);
-
-                Vector2 y = GetUV2(param, ui + 2);
-                Vector2 z = GetUV2(param, ui + 4);
-                Vector2 q = GetUV2(param, ui + 6);
-
-                if (!uvs.ContainsKey(index2[k + 1]))
-                {
-                    uvs.Add(index2[k + 1], x);
-                }
-                if (!uvs.ContainsKey(index2[k + 3]))
-                {
-                    uvs.Add(index2[k + 3], x);
-                }
-                if (!uvs.ContainsKey(index2[k + 5]))
-                {
-                    uvs.Add(index2[k + 5], x);
-                }
-                if (!uvs.ContainsKey(index2[k + 7]))
-                {
-                    uvs.Add(index2[k + 7], x);
-                }
-            }
-
-            Vector2 GetUV(Vector3Int param, int uii)
-            {
-                int offx = off_unit * (tex[uii + 6] & 3);
-                float u = (float)(tex[uii] + offx) / (float)param.x;
-                float v = (float)(tex[uii + 1]) / (float)param.y;
-                return new Vector2(u, v);
-            }
-
-            Vector2 GetUV2(Vector3Int param, int uii)
-            {
-                int offx = off_unit * (tex2[uii + 6] & 3);
-                float u = (float)(tex2[uii] + offx) / (float)param.x;
-                float v = (float)(tex2[uii + 1]) / (float)param.y;
-                return new Vector2(u, v);
-            }
-
-            for (int iii = 0; iii < vector3s.Count; iii++)
-            {
-                if (uvs.ContainsKey(iii))
-                {
-                    uv.Add(uvs[iii]);
-                }
-                else
-                {
-                    uv.Add(new Vector2());
-                }
-            }
-
             mesh.vertices = vector3s.ToArray();
             if ( normals.Count <= vector3s.Count ) mesh.normals = normals.ToArray();
-            
-            //if (max > vector3s.Count)
-            //{
-            //    Debug.LogWarning(i.ToString() + " " + buf.path);
-            //}
 
             mesh.SetTriangles(Triangles, 0);
-            //mesh.SetTriangles(Triangles2, 1);
-            //mesh.SetTriangles(Triangles3, 2);
-
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
+            var uv = GetUVs(buf, vector3s, index, index2, tex, tex2 );
             mesh.SetUVs(0, uv.ToArray());
+            //mesh.SetUVs(1, uv2.ToArray());
             meshObj.Add(mesh);
         }
 
         return meshObj.ToArray();
+    }
+
+    public static List<Vector2> GetUVs(dataViewExt buf, List<Vector3> vector3s, int[] index, int[] index2, int[] tex, int[] tex2)
+    {
+        List<Vector2> uv = new List<Vector2>();
+        List<Vector2> uv2 = new List<Vector2>();
+
+        Vector3Int param = GetTextureParams(buf.path);
+
+        Dictionary<int, Vector2> uvs = new Dictionary<int, Vector2>();
+        Dictionary<int, Vector2> uvs2 = new Dictionary<int, Vector2>();
+        int off_unit = param.x / param.z;
+
+        for (int k = 0; k < index.Length; k += 6)
+        {
+            int ui = k * 2;
+
+            Vector2 x = GetUV(param, ui);
+            Vector2 y = GetUV(param, ui + 2);
+            Vector2 z = GetUV(param, ui + 4);
+
+            uvs.TryAdd(index[k + 1], x);
+            //uvs.TryAdd(index[k + 3], x);
+            //uvs.TryAdd(index[k + 5], x);
+        }
+
+        for (int k = 0; k < index2.Length; k += 8)
+        {
+            int ui = k * 2;
+
+            Vector2 x = GetUV2(param, ui);
+
+            Vector2 y = GetUV2(param, ui + 2);
+            Vector2 z = GetUV2(param, ui + 4);
+            Vector2 q = GetUV2(param, ui + 6);
+
+            uvs.TryAdd(index2[k + 1], x);
+            uvs.TryAdd(index2[k + 3], x);
+            uvs.TryAdd(index2[k + 5], x);
+            uvs.TryAdd(index2[k + 7], x);
+        }
+
+        Vector2 GetUV(Vector3Int param, int uii)
+        {
+            int offx = off_unit * (tex[uii + 6] & 3);
+            float u = (float)(tex[uii] + offx) / (float)param.x;
+            float v = (float)(tex[uii + 1]) / (float)param.y;
+            return new Vector2(u, v);
+        }
+
+        Vector2 GetUV2(Vector3Int param, int uii)
+        {
+            int offx = off_unit * (tex2[uii + 6] & 3);
+            float u = (float)(tex2[uii] + offx) / (float)param.x;
+            float v = (float)(tex2[uii + 1]) / (float)param.y;
+            return new Vector2(u, v);
+        }
+
+        Debug.Log(vector3s.Count.ToString() + " " + uvs.Count().ToString());
+        for (int iii = 0; iii < vector3s.Count; iii++)
+        {
+            if (uvs.ContainsKey(iii))
+            {
+                uv.Add(uvs[iii]);
+            }
+            else
+            {
+                uv.Add(new Vector2());
+            }
+        }
+
+        //for (int iii = 0; iii < vector3s.Count; iii++)
+        //{
+        //    if (uvs.ContainsKey(iii))
+        //    {
+        //        uv.Add(uvs[iii]);
+        //    }
+        //    else
+        //    {
+        //        uv.Add(new Vector2());
+        //    }
+        //}
+
+        return uv;
     }
 
     private static Vector3Int GetTextureParams(string path)
@@ -590,29 +595,4 @@ public class Model2
         }
         //Debug.Log(message);
     }
-}
-
-public class group
-{
-    public int flag;
-    public int sk_idx;
-
-    //public group(int flag, int sk_idx) 
-    //{ 
-    //    this.flag = flag;
-    //    this.sk_idx = sk_idx;
-    //}
-}
-
-public class sk
-{
-    public int x;
-    public int y;
-    public int z;
-    public int spx;
-    public int spy;
-    public int spz;
-    public int frameTime;
-    public int moveStep;
-    public Vector3[] angle;
 }
