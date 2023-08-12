@@ -55,45 +55,47 @@ public static class SaveData
         }
     }
 
-    public static void SaveTexture2D(Texture2D texture, string path, bool CreateMaterial = true)
+    public static void SaveTexture2D(Texture2D texture, string path, bool CreateMaterial = true, bool IsRecreateAsset = true)
     {
-        //string folderEM = CheckFolder(playId, emdId);
-
         string pathTex = path + ".asset";
+        Texture2D tempTexture = default(Texture2D);
 
-        if (AssetDatabase.LoadAssetAtPath<Texture2D>(path) != null)
+        if (AssetDatabase.LoadAssetAtPath<Texture2D>(pathTex) != null)
         {
-            Texture2D temp = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            tempTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(pathTex);
 
-            temp.Reinitialize(texture.width, texture.height, texture.format, false);
+            tempTexture.Reinitialize(texture.width, texture.height, texture.format, false);
             for (int i = 0; i < texture.width; i++)
             {
                 for (int j = 0; j < texture.height; j++)
                 {
-                    temp.SetPixel(i,j, texture.GetPixel(i, j));
+                    tempTexture.SetPixel(i,j, texture.GetPixel(i, j));
                 }
             }
-            temp.Apply();
+            tempTexture.Apply();
+            AssetDatabase.SaveAssetIfDirty(tempTexture);
         }
         else
         {
-            AssetDatabase.CreateAsset(texture, path);
+            tempTexture = texture;
+            AssetDatabase.CreateAsset(texture, pathTex);
         }
 
         Shader shader = Shader.Find("Standard (Specular setup)");
-        Material material = new Material(shader);
-        material.SetTexture("_MainTex", texture);
         string pathMat = path + ".mat";
 
         if (AssetDatabase.LoadAssetAtPath<Material>(pathMat) != null)
         {
             Material temp = AssetDatabase.LoadAssetAtPath<Material>(pathMat);
             temp.shader = shader;
-            temp.SetTexture("_MainTex", texture);
+            temp.SetTexture("_MainTex", tempTexture);
             AssetDatabase.SaveAssetIfDirty(temp);
         }
         else
         {
+            Material material = new Material(shader);
+            material.SetTexture("_MainTex", tempTexture);
+            AssetDatabase.SaveAssetIfDirty(material);
             AssetDatabase.CreateAsset(material, pathMat);
         }
     }

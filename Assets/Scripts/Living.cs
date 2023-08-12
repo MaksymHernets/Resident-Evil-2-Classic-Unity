@@ -32,6 +32,10 @@ public class Living
     public MD md;
     public Texture2D tex;
 
+    public int playId;
+    public string emdId;
+    public string path;
+
     public Living()
     {
 

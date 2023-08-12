@@ -16,29 +16,31 @@ public static class Liv
         return loadEmd(p, e);
     }
 
-    public static void fromTim(int playId, int emdId)
+    public static Living fromTim(int playId, int emdId)
     {
         var e = tool.toString(emdId, 16);
 
         var p = playId == 0 ? 1 : 0;
         //if (emdId < 0x10) throw new Error("bad emd id");
-        loadTim(p, e);
+        return loadTim(p, e);
     }
 
-    public static void loadTim(int playId, string emdId)
+    public static Living loadTim(int playId, string emdId)
     {
+        Living living = new Living();
         string key = "PL" + playId + "/EMD" + playId + "/EM" + playId + emdId;
         string texfile = key + ".TIM";
 
-        if (File.Exists("Assets/" + texfile) == false) return;
+        living.path = key;
+        living.playId = playId;
+        living.emdId = emdId;
+
+        if (File.Exists("Assets/" + texfile) == false) return living;
 
         Texture2D tex = Tim.parseStream(File2.openDataView(texfile));
+        living.tex = tex;
 
-        SaveData.SaveTexture2D(tex, key);
-
-        //Living thiz = new Living(mod, tex);
-        //thiz.texfile = texfile;
-        //return thiz;
+        return living;
     }
 
     public static Living loadEmd(int playId, string emdId)
@@ -48,12 +50,13 @@ public static class Liv
         string emdfile = key + ".EMD";
         string texfile = key + ".TIM";
 
+        living.path = key;
+        living.playId = playId;
+        living.emdId = emdId;
+
         if (File.Exists("Assets/" + emdfile) == false) return null;
         //console.debug("Load EMD", emdfile, '-', texfile);
         MD mod = Model2.emd(emdfile);
-        mod.path = key;
-        mod.playId = playId;
-        mod.emdId = emdId;
 
         living.md = mod;
 

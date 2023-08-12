@@ -12,18 +12,16 @@ public class ImportOriginAssets : MonoBehaviour
         for (int i = startId; i <= endId; i++)
         {
             Living living0 = Liv.fromEmd(0, i);
-
-            SaveData.CheckFolderPLS(living0.md.playId, living0.md.emdId);
-            string path = "Assets/EMD" + living0.md.playId + "/EM" + "_" + living0.md.playId + living0.md.emdId;
-
-            SaveData.SaveMD(living0.md, path);
+            SaveData.CheckFolderPLS(living0.playId, living0.emdId);
+            string path = "Assets/EMD" + living0.playId + "/EM" + "_" + living0.playId + living0.emdId;
+            if (living0 == null) Debug.LogWarning(path);
+            else SaveData.SaveMD(living0.md, path);
 
             Living living1 = Liv.fromEmd(1, i);
-
-            SaveData.CheckFolderPLS(living1.md.playId, living1.md.emdId);
-            path = "Assets/EMD" + living1.md.playId + "/EM" + "_" + living1.md.playId + living1.md.emdId;
-
-            SaveData.SaveMD(living1.md, path);
+            SaveData.CheckFolderPLS(living1.playId, living1.emdId);
+            path = "Assets/EMD" + living1.playId + "/EM" + "_" + living1.playId + living1.emdId;
+            if (living0 == null) Debug.LogWarning(path);
+            else SaveData.SaveMD(living1.md, path);
         }
     }
 
@@ -32,8 +30,8 @@ public class ImportOriginAssets : MonoBehaviour
     {
         Living living1 = Liv.fromEmd(1, 0x4B);
 
-        SaveData.CheckFolderPLS(living1.md.playId, living1.md.emdId);
-        string path = "Assets/EMD" + living1.md.playId + "/EM" + "_" + living1.md.playId + living1.md.emdId;
+        SaveData.CheckFolderPLS(living1.playId, living1.emdId);
+        string path = "Assets/EMD" + living1.playId + "/EM" + "_" + living1.playId + living1.emdId;
 
         SaveData.SaveMD(living1.md, path, false);
     }
@@ -43,17 +41,32 @@ public class ImportOriginAssets : MonoBehaviour
     {
         int startId = 30;
         int endId = 89;
+        string path;
         for (int i = startId; i <= endId; i++)
         {
-            Liv.fromTim(0, i);
-            Liv.fromTim(1, i);
+            Living living0 = Liv.fromTim(0, i);
+            path = "Assets/EMD" + living0.playId + "/EM" + "_" + living0.playId + living0.emdId + "/" + living0.emdId;
+
+            if (living0.tex == null) Debug.LogWarning(path);
+            else SaveData.SaveTexture2D(living0.tex, path);
+
+            Living living1 = Liv.fromTim(1, i);
+            path = "Assets/EMD" + living1.playId + "/EM" + "_" + living1.playId + living1.emdId + "/" + living1.emdId;
+           
+            if (living1.tex == null) Debug.LogWarning(path);
+            else SaveData.SaveTexture2D(living1.tex, path);
         }
     }
 
     [MenuItem("Resident Evil/Import Texture Test")]
     public static void ImportTextureTest()
     {
-        Liv.fromTim(1, 0x4B);
+        Living living1 = Liv.fromTim(1, 0x4B);
+
+        SaveData.CheckFolderPLS(living1.playId, living1.emdId);
+        string path = "Assets/EMD" + living1.playId + "/EM" + "_" + living1.playId + living1.emdId + "/" + living1.emdId;
+
+        SaveData.SaveTexture2D(living1.tex, path);
     }
 
     [MenuItem("Resident Evil/Import PLDs")]
