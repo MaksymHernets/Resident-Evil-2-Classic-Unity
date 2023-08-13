@@ -242,6 +242,51 @@ public class DataView
         }
         return array;
     }
+
+    public static int[] buildBufferInt16Array(DataView buf, int offset, int count, int stride)
+    {
+        Int16[] array = buf.build_Int16Array(buf, offset, count * stride);
+        int[] arrayInt = new int[array.Length];
+        for (int i = 0; i < array.Length; i++)
+        {
+            arrayInt[i] = array[i];
+        }
+        return arrayInt;
+    }
+
+    public static float[] buildBufferFloat16Array(DataView buf, int offset, int count, int stride)
+    {
+        float[] array = buf.build_Float16Array(buf, offset, count * stride);
+        float[] arrayInt = new float[array.Length];
+        for (int i = 0; i < array.Length; i++)
+        {
+            if (Single.IsNaN(array[i])) arrayInt[i] = 0;
+            arrayInt[i] = array[i];
+        }
+        return arrayInt;
+    }
+
+    public static int[] buildBufferUint16Array(DataView buf, int offset, int count, int stride)
+    {
+        UInt16[] array = buf.build_UInt16Array(buf, offset, count * stride);
+        int[] arrayInt = new int[array.Length];
+        for (int i = 0; i < array.Length; i++)
+        {
+            arrayInt[i] = array[i];
+        }
+        return arrayInt;
+    }
+
+    public static int[] buildBufferUint8Array(DataView buf, int offset, int count, int stride)
+    {
+        UInt16[] array = buf.build_UInt8Array(buf, offset, count * (int)stride);
+        int[] arrayInt = new int[array.Length];
+        for (int i = 0; i < array.Length; i++)
+        {
+            arrayInt[i] = array[i];
+        }
+        return arrayInt;
+    }
 }
 
 

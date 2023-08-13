@@ -6,8 +6,6 @@ using UnityEngine;
 
 public class Model2
 {
-    static float PI2         = 2 * Mathf.PI;
-    static float MAX_ANGLE   = 0x1000;
     static int VERTEX_LEN  = 2 * 4;
     static int NORMAL_LEN  = 2 * 4; //VERTEX_LEN;
     static int TRI_IDX_LEN = 2 * 6;
@@ -32,7 +30,7 @@ public class Model2
         if (am_idx != null && am_idx.Length != 0) skeleton(md, am_idx, buf, buf._offset(6));
 
         md.meshs = mesh(buf, buf._offset(7));
-        //BoneNm.bind(file, md);
+        BoneNm.bind(file, md);
         //debug("Anim Group", md.pose_group.Count.ToString());
         return md;
     }
@@ -133,17 +131,17 @@ public class Model2
 
         if (ref_val > 0)
         {
-            //__bone_bind(md, count, xyoff, ref_offset, buf);
+            __bone_bind(md, count, xyoff, ref_offset, buf);
         }
 
         //
         // 生化危机用的是关节骨骼模型, 有一个整体的 xyz 偏移和每个关节的角度.
         // 一个关节的转动会牵连子关节的运动
         //
-        //var get_frame_data = create_anim_frame_data(buf, anim_offset, size);
+        var get_frame_data = anim_frame_data.create_anim_frame_data(buf, anim_offset, size);
 
-        //md.addAnimSet(am_idx, get_frame_data);
-        debug(" * POSE count", md.pose.Length.ToString());
+        md.addAnimSet(am_idx, get_frame_data);
+        debug(" * POSE count", md.pose.Count.ToString());
     }
 
     public static void __bone_bind(MD md, int count, int xyoff, int ref_offset, dataViewExt buf)
@@ -152,6 +150,10 @@ public class Model2
         List<SkeletonBone> bone = md.bone;
         //const bind = { };
         List<SkeletonBone> bind = new List<SkeletonBone>(count);
+        for (int i = 0; i < count; i++)
+        {
+            bind.Add(null);
+        }
         int miny = 99999, maxy = 0;
 
         for (int i = 0; i < count; ++i)
@@ -188,121 +190,15 @@ public class Model2
         }
 
         for (var i=0; i<count; ++i) {
-            if (bind[i] == null) {
+            if (bind[i] != null) {
                 bone[i].parent = bind[i];
                 bind[i].child.Add(bone[i]); // push
-                debug(bone[i].toString());
+                //debug(bone[i].toString());
             }
         }
 
         md.height = Math.Abs(maxy - miny);
         debug(" & Height", md.height.ToString());
-    }
-
-    public static int create_anim_frame_data(dataViewExt buf, int anim_offset, int data_size)
-    {
-        int xy_size    = 2 * 6;
-        int angle_size = data_size - xy_size;
-        int RLEN       = (int)(angle_size / 9 * 2); //parseInt
-        // const skdata     = { angle: [] };
-        float angle_fn   = Mathf.Rad2Deg; // radian & degrees
-        sk[] sk_cache;
-        var curr_sk_idx  = -1;
-
-        if (angle_size <= 0)
-        {
-            console.warn("NO more anim frame data");
-            return 0;
-        }
-
-        debug(" * Anim begin", anim_offset.ToString(), data_size.ToString());
-        debug(" * Anim angle", RLEN.ToString());
-        // skdata.angle = new Array(RLEN);
-        // for (let i=0; i<RLEN; ++i) {
-        //   skdata.angle[i] = {x:0, y:0, z:0};
-        // }
-
-        //
-        // sk_index - 骨骼状态索引
-        //
-
-        sk get_frame_data(dataViewExt buf, int sk_index)
-        {
-            // debug(" * Frame sk", sk_index);
-            // 没有改变骨骼索引直接返回最后的数据
-            sk sk = sk_cache[sk_index];
-            if (sk != null) return sk;
-
-            sk = sk_cache[sk_index];
-            // if (curr_sk_idx === sk_index) return skdata;
-            // 整体位置偏移量
-            var xy_off = anim_offset + data_size * sk_index;
-            // buf.print(xy_off, 0x20);
-            sk.x = buf.Short(xy_off);
-            sk.y = buf.Short();
-            sk.z = buf.Short();
-            // spx 似乎和动画帧绝对时间有关, spy 总是0
-            // spz 是移动偏移, 体现步伐之间的非线性移动
-            sk.spx = buf.Short();
-            sk.spy = buf.Short();
-            sk.spz = buf.Short();
-            // 动画帧停留时间
-            // if (sk_index == 0) {
-            //   sk.frameTime = Math.abs(sk.spx);
-            // } else {
-            //   sk.frameTime = Math.abs(sk.spx - get_frame_data(sk_index-1).spx);
-            // }
-            sk.frameTime = (sk.spx < 0 ? -sk.spx : sk.spx) & 0x3F;
-            // 应该是某种索引, 总是有规律的递增/递减
-            sk.moveStep = sk.spx >> 6;
-
-            sk.angle = new Vector3[RLEN];
-            compute_angle(sk, buf, RLEN);
-            // debug(JSON.stringify(sk), RLEN);
-            return sk;
-        }
-
-        return 0;
-    }
-
-    public static void compute_angle(sk skdata, dataViewExt buf, int RLEN)
-    {
-        var i = -1;
-        Vector3 r;
-        int a0, a1, a2, a3, a4;
-        while (++i < RLEN)
-        {
-            r = skdata.angle[i];
-            a0 = buf.Byte();
-            a1 = buf.Byte();
-            a2 = buf.Byte();
-            a3 = buf.Byte();
-            a4 = buf.Byte();
-            // debug('joint', i, b2(a0), b2(a1), b2(a2), b2(a3), b2(a4));
-            r.x = angle_fn(a0 | ((a1 & 0xF) << 8));
-            r.y = angle_fn((a1 >> 4) | (a2 << 4));
-            r.z = angle_fn(a3 | ((a4 & 0xF) << 8));
-            // debug(r.x, r.y, r.z);
-
-            if (++i >= RLEN) break;
-
-            r = skdata.angle[i];
-            a0 = a4;
-            a1 = buf.Byte();
-            a2 = buf.Byte();
-            a3 = buf.Byte();
-            a4 = buf.Byte();
-            // debug('joint', i, b2(a0), b2(a1), b2(a2), b2(a3), b2(a4));
-            r.x = angle_fn((a0 >> 4) | (a1 << 4));
-            r.y = angle_fn(a2 | ((a3 & 0xF) << 8));
-            r.z = angle_fn((a3 >> 4) | (a4 << 4));
-            // debug(r.x, r.y, r.z);
-        }
-    }
-
-    private static float angle_fn(float n)
-    {
-        return (n / MAX_ANGLE) * PI2;
     }
 
     private static Mesh[] mesh(dataViewExt buf, int offset)
@@ -330,21 +226,21 @@ public class Model2
             int[] vertex;
             int oo = buf.Ulong(offset) + beginAt;
             int cc = buf.Ulong();
-            vertex = buildBufferInt16Array(buf, oo, cc, VERTEX_LEN); // Int16Array
+            vertex = DataView.buildBufferInt16Array(buf, oo, cc, VERTEX_LEN); // Int16Array
 
             int[] normal;
             o = buf.Ulong() + beginAt;
             c = buf.Ulong();
-            normal = buildBufferInt16Array(buf, o, c, NORMAL_LEN); // Int16Array
+            normal = DataView.buildBufferInt16Array(buf, o, c, NORMAL_LEN); // Int16Array
 
             int[] index;
             o = buf.Ulong() + beginAt;
             c = buf.Ulong();
-            index = buildBufferUint16Array(buf, o, c, TRI_IDX_LEN); //Uint16Array
+            index = DataView.buildBufferUint16Array(buf, o, c, TRI_IDX_LEN); //Uint16Array
 
             int[] tex;
             o = buf.Ulong() + beginAt;
-            tex = buildBufferUint8Array(buf, o, c, TRI_TEX_LEN); //Uint8Array
+            tex = DataView.buildBufferUint8Array(buf, o, c, TRI_TEX_LEN); //Uint8Array
             //debug(" % T end", i, tri.vertex.count, h4(tri.vertex.offset));
 
             // 四边形
@@ -352,21 +248,21 @@ public class Model2
             int[] vertex2;
             o = buf.Ulong() + beginAt;
             c = buf.Ulong();
-            vertex2 = buildBufferInt16Array(buf, o, c, VERTEX_LEN); // Int16Array
+            vertex2 = DataView.buildBufferInt16Array(buf, o, c, VERTEX_LEN); // Int16Array
 
             int[] normal2;
             o = buf.Ulong() + beginAt;
             c = buf.Ulong();
-            normal2 = buildBufferInt16Array(buf, o, c, NORMAL_LEN); // Int16Array
+            normal2 = DataView.buildBufferInt16Array(buf, o, c, NORMAL_LEN); // Int16Array
 
             int[] index2;
             o = buf.Ulong() + beginAt;
             c = buf.Ulong(); 
-            index2 = buildBufferUint16Array(buf, o, c, QUA_IDX_LEN); //Uint16Array
+            index2 = DataView.buildBufferUint16Array(buf, o, c, QUA_IDX_LEN); //Uint16Array
 
             int[] tex2;
             o = buf.Ulong() + beginAt;
-            tex2 = buildBufferUint8Array(buf, o, c, QUA_TEX_LEN); //Uint8Array
+            tex2 = DataView.buildBufferUint8Array(buf, o, c, QUA_TEX_LEN); //Uint8Array
             //debug(' % Q end', i, qua.vertex.count, h4(qua.vertex.offset));
 
             offset += 56;
@@ -411,8 +307,9 @@ public class Model2
             mesh.SetTriangles(Triangles, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
-            var uv = GetUVs(buf, vector3s, index, index2, tex, tex2 );
-            mesh.SetUVs(0, uv.ToArray());
+            var uvss = GetUVs(buf, vector3s, index, index2, tex, tex2 );
+            mesh.SetUVs(0, uvss[0].ToArray());
+            mesh.SetUVs(1, uvss[1].ToArray());
             //mesh.SetUVs(1, uv2.ToArray());
             meshObj.Add(mesh);
         }
@@ -420,8 +317,9 @@ public class Model2
         return meshObj.ToArray();
     }
 
-    public static List<Vector2> GetUVs(dataViewExt buf, List<Vector3> vector3s, int[] index, int[] index2, int[] tex, int[] tex2)
+    public static List<List<Vector2>> GetUVs(dataViewExt buf, List<Vector3> vector3s, int[] index, int[] index2, int[] tex, int[] tex2)
     {
+        List<List<Vector2>> uvss = new List<List<Vector2>>();
         List<Vector2> uv = new List<Vector2>();
         List<Vector2> uv2 = new List<Vector2>();
 
@@ -431,38 +329,52 @@ public class Model2
         Dictionary<int, Vector2> uvs2 = new Dictionary<int, Vector2>();
         int off_unit = param.x / param.z;
 
-        for (int k = 0; k < index.Length; k += 6)
+        for (int k = 0; k < index.Length - 1; k += 6)
         {
             int ui = k * 2;
 
             Vector2 x = GetUV(param, ui);
-            Vector2 y = GetUV(param, ui + 2);
-            Vector2 z = GetUV(param, ui + 4);
+            Vector2 y = GetUV(param, ui + 4);
+            Vector2 z = GetUV(param, ui + 8);
+
+            Vector2 x1 = new Vector2(Mathf.Abs(1 - x.x), Mathf.Abs(1 - x.y));
+            Vector2 y1 = new Vector2(Mathf.Abs(1 - y.x), Mathf.Abs(1 - y.y));
+            Vector2 z1 = new Vector2(Mathf.Abs(1 - z.x), Mathf.Abs(1 - z.y));
+
+            //uvs.TryAdd(index[k + 1], x);
+            //uvs.TryAdd(index[k + 3], z);
+            //uvs.TryAdd(index[k + 5], z1);
 
             uvs.TryAdd(index[k + 1], x);
-            //uvs.TryAdd(index[k + 3], x);
-            //uvs.TryAdd(index[k + 5], x);
+            uvs.TryAdd(index[k + 3], y);
+            uvs.TryAdd(index[k + 5], z);
         }
 
-        for (int k = 0; k < index2.Length; k += 8)
+        for (int k = 0; k < index2.Length - 1; k += 8)
         {
             int ui = k * 2;
 
             Vector2 x = GetUV2(param, ui);
 
-            Vector2 y = GetUV2(param, ui + 2);
-            Vector2 z = GetUV2(param, ui + 4);
-            Vector2 q = GetUV2(param, ui + 6);
+            Vector2 y = GetUV2(param, ui + 4);
+            Vector2 z = GetUV2(param, ui + 8);
+            Vector2 q = GetUV2(param, ui + 12);
 
             uvs.TryAdd(index2[k + 1], x);
-            uvs.TryAdd(index2[k + 3], x);
-            uvs.TryAdd(index2[k + 5], x);
-            uvs.TryAdd(index2[k + 7], x);
+            uvs.TryAdd(index2[k + 3], y);
+            uvs.TryAdd(index2[k + 5], q);
+            uvs.TryAdd(index2[k + 7], z);
+
+            
+
+            //uvs.TryAdd(index2[k + 1], x);
+            //uvs.TryAdd(index2[k + 5], z);
+            //uvs.TryAdd(index2[k + 7], q);
         }
 
         Vector2 GetUV(Vector3Int param, int uii)
         {
-            int offx = off_unit * (tex[uii + 6] & 3);
+            int offx = off_unit * (tex[uii + 3] & 3);
             float u = (float)(tex[uii] + offx) / (float)param.x;
             float v = (float)(tex[uii + 1]) / (float)param.y;
             return new Vector2(u, v);
@@ -470,8 +382,8 @@ public class Model2
 
         Vector2 GetUV2(Vector3Int param, int uii)
         {
-            int offx = off_unit * (tex2[uii + 6] & 3);
-            float u = (float)(tex2[uii] + offx) / (float)param.x;
+            //int offx = off_unit * (tex2[uii + 3] & 3);
+            float u = (float)(tex2[uii] + 0) / (float)param.x;
             float v = (float)(tex2[uii + 1]) / (float)param.y;
             return new Vector2(u, v);
         }
@@ -489,19 +401,21 @@ public class Model2
             }
         }
 
-        //for (int iii = 0; iii < vector3s.Count; iii++)
-        //{
-        //    if (uvs.ContainsKey(iii))
-        //    {
-        //        uv.Add(uvs[iii]);
-        //    }
-        //    else
-        //    {
-        //        uv.Add(new Vector2());
-        //    }
-        //}
+        for (int iii = 0; iii < vector3s.Count; iii++)
+        {
+            if (uvs2.ContainsKey(iii))
+            {
+                uv2.Add(uvs2[iii]);
+            }
+            else
+            {
+                uv2.Add(new Vector2());
+            }
+        }
 
-        return uv;
+        uvss.Add(uv);
+        uvss.Add(uv2);
+        return uvss;
     }
 
     private static Vector3Int GetTextureParams(string path)
@@ -528,7 +442,7 @@ public class Model2
         for (int p = 0; p < nb_palettes; ++p)
         {
             //palettes[p] = new Uint16Array(buf.buffer, buf.byteOffset + vi, palette_colors);
-            palettes.Add(buildBufferUint16Array(buf, buf.byteOffset + vi, palette_colors, 1).ToList());
+            palettes.Add(DataView.buildBufferUint16Array(buf, buf.byteOffset + vi, palette_colors, 1).ToList());
             vi += palette_colors * 2;
             // console.debug("Palette", p);
             // h.printHex(palettes[p]);
@@ -539,51 +453,6 @@ public class Model2
         paras.z = buf.getUint16(18, true); // nb_palettes
 
         return paras;
-    }
-
-    public static int[] buildBufferInt16Array(DataView buf, int offset, int count, int stride)
-    {
-        Int16[] array = buf.build_Int16Array(buf, offset, count * stride);
-        int[] arrayInt = new int[array.Length];
-        for (int i = 0; i < array.Length; i++)
-        {
-            arrayInt[i] = array[i];
-        }
-        return arrayInt;
-    }
-
-    public static float[] buildBufferFloat16Array(DataView buf, int offset, int count, int stride)
-    {
-        float[] array = buf.build_Float16Array(buf, offset, count * stride);
-        float[] arrayInt = new float[array.Length];
-        for (int i = 0; i < array.Length; i++)
-        {
-            if (Single.IsNaN(array[i])) arrayInt[i] = 0;
-            arrayInt[i] = array[i];
-        }
-        return arrayInt;
-    }
-
-    public static int[] buildBufferUint16Array(DataView buf, int offset, int count, int stride)
-    {
-        UInt16[] array = buf.build_UInt16Array(buf, offset, count * stride);
-        int[] arrayInt = new int[array.Length];
-        for (int i = 0; i < array.Length; i++)
-        {
-            arrayInt[i] = array[i];
-        }
-        return arrayInt;
-    }
-
-    public static int[] buildBufferUint8Array(DataView buf, int offset, int count, int stride)
-    {
-        UInt16[] array = buf.build_UInt8Array(buf, offset, count * (int)stride);
-        int[] arrayInt = new int[array.Length];
-        for (int i = 0; i < array.Length; i++)
-        {
-            arrayInt[i] = array[i];
-        }
-        return arrayInt;
     }
 
     private static void debug(params string[] messages)

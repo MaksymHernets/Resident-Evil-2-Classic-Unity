@@ -8,7 +8,8 @@ public class SkeletonBone
     public sk dat;
     public SkeletonBone parent;
     public List<SkeletonBone> child;
-   
+    public int Length = 0;
+
     // 骨头可以组合一个绘制对象
     public object _combination = null;
     // 最后一次骨骼状态变换矩阵的值

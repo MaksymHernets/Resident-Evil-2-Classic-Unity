@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Text.RegularExpressions;
+using System;
+using System.Linq;
 //using System.Numerics;
 
 //import node from '../boot/node.js'
@@ -22,11 +24,7 @@ public enum person {
   lHand = 11,
   rBigarm = 12,
   rForearm = 13,
-  rHand = 14,
-  ff = 15,
-  ss = 16,
-  sev = 17,
-  ee = 18
+  rHand = 14
 }
 
 public class BoneNm
@@ -35,12 +33,13 @@ public class BoneNm
     //  // Leon module
     //  50: person,
     //}
-    public static Dictionary<string, person> _mapp;
+    public static Dictionary<string, List<string>> _mapp;
 
 
     public BoneNm()
     {
-        _mapp.Add(50.ToString(), person.ff);
+        var map = Enum.GetNames(typeof(person));
+        _mapp.Add(50.ToString(), map.ToList());
     }
 
     public static int fixMoveStep()
@@ -61,12 +60,12 @@ public class BoneNm
         return Uv;
     }
 
-
-    public static Vector3 calculateFootstepLength(SkeletonBone[] bone)
+    public static float calculateFootstepLength(Dictionary<string, SkeletonBone> bone)
     {
-        Vector3 l = _getBonePos(bone[(int)person.lFoot]._pos, bone[(int)person.lFoot].lastTrans);
-        Vector3 r = _getBonePos(bone[(int)person.rFoot]._pos, bone[(int)person.rFoot].lastTrans);
-        return new Vector3(l.x - r.x , l.y - r.y, l.z - r.z); // l[0] - r[0]
+        Vector3 l = _getBonePos(bone["lFoot"]._pos, bone["lFoot"].lastTrans);
+        Vector3 r = _getBonePos(bone["rFoot"]._pos, bone["rFoot"].lastTrans);
+        //return new Vector3(l.x - r.x, l.y - r.y, l.z - r.z); // l[0] - r[0]
+        return Vector3.Distance(l, r);
         //Vector3 res = l;
         // vec3.subtract(res, l, r);
         // return vec3.length(res);
@@ -76,9 +75,10 @@ public class BoneNm
     {
         var boneIdx = md.boneIdx; //{ stepLength: fixMoveStep,};// 返回模型两脚间的距离
 
-        Regex reg = new Regex(@"/.\/ em(.)(..)\.emd/i");
+        Regex reg = new Regex(@"/.\/em(.)(..)\.emd/i");
+        name = name.Replace("sourcegame/", "");
         MatchCollection match = reg.Matches(name); //reg.exec(name);
-        if (match.Count > 0)
+        if (match.Count == 0)
         {
             console.warn("invaild module file name", name);
             return;
@@ -98,14 +98,11 @@ public class BoneNm
             return;
         }
 
-        //foreach (var name in map)
-        //{
-        //    boneIdx[name] = map[name];
-        //}
-
-        //if ((int)boneIdx.lFoot >= 0 && (int)boneIdx.lFoot >= 0)
-        //{
-        //    boneIdx.stepLength = calculateFootstepLength(boneIdx);
-        //}
+        int index = 0;
+        foreach (string namee in map)
+        {
+            boneIdx.Add(namee, new SkeletonBone(new sk(), index));
+             ++index;
+        }
     }
 }

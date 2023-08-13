@@ -40,12 +40,12 @@ public class rdt
 //
 // 按照编号读取
 //
-    public obj from(int stage, int room, string player)
+    public obj from(int stage, int room, int player)
     {
         string r = tool.toString(room, 16);
         if (room < 0x10) r = "0" + r;
 
-        string file = "Pl" + player + "/Rdt/ROOM" + tool.toString(stage, 17) + r + player + ".RDT"; //.join('');
+        string file = "sourcegame/Pl" + player + "/Rdt/ROOM" + stage + tool.toString(stage, 17) + r + player + ".RDT"; //.join('');
 
         return load(file);
     }
@@ -60,16 +60,29 @@ public class rdt
         {
             throw new Error("Not RDT file " + file);
         }
-            
-        byte[] filebuf = File2.open(file).buffer;
+
+        dataViewExt dataViewExt = File2.open(file);
+        byte[] filebuf = dataViewExt.buffer;
+        if (filebuf == null) return null;
         int state = (int)(file.Substring(file.Length - 8, 1).Length); // , 16)
         int room = (int)(file.Substring(file.Length - 7, 2).Length); //, 16)
         obj obj = new obj() { state = state, room = room };
 
-        int[] Head = new int[8];//Uint8Array(filebuf, 0, 8);
+        int[] Head = buildBufferUint8Array(dataViewExt, 0, 8, 1);//Uint8Array(filebuf, 0, 8);
         int camera_count = Head[1];
         int num_obj10 = Head[2];
         //debug(Head, 'obj7', camera_count, 'obj10', num_obj10);
+
+        int[] buildBufferUint8Array(DataView buf, int offset, int count, int stride)
+        {
+            UInt16[] array = buf.build_UInt8Array(buf, offset, count * (int)stride);
+            int[] arrayInt = new int[array.Length];
+            for (int i = 0; i < array.Length; i++)
+            {
+                arrayInt[i] = array[i];
+            }
+            return arrayInt;
+        }
 
         off off = readOffset(filebuf);
         readCameraPos(filebuf, off, obj, camera_count);
@@ -437,11 +450,11 @@ public class rdt
             c.to_z = v.getInt32(24 + vi, true);
             int mask_off = (int)v.getUint32(28 + vi, true);
             // debug("camera", i, J(c));
-            if (mask_off != 0xffffffff)
+            if (mask_off != 0) // 0xffffffff
             {
                 c.mask = readMask(filebuf, mask_off);
             }
-            cameras[i] = c;
+            cameras.Add(c);
         }
 
         ret.cameras = cameras;
@@ -453,7 +466,7 @@ public class rdt
         int c_offset = v.getUint16(0, true);
         int c_masks  = v.getUint16(2, true);
         //debug("Mask OFFset", c_offset, c_masks, off);
-        if (c_offset == 0xFFFF || c_masks == 0xFFFF)
+        if (c_offset == 0 || c_masks == 0) // 0xffff
         {
             return null;
         }
