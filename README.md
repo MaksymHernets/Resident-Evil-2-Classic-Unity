@@ -3,6 +3,8 @@
 To import assets, you need to use a specific version of the game, namely 'Resident Evil 2 PC-1998 Rebirth'
 It must be placed in the project in the source game folder.
 
+![screen](https://github.com/yanmingsohu/PlayJS/blob/master/screen/s2.jpg](https://github.com/MaksymHernets/Resident-Evil-2-Classic-Unity/blob/master/Screenshots/Screenshot%202023-08-13%20140700.png)
+
 # TODO list
 
 * [ ] load 3d model Characters ( player, enemy, for cutscenes)
