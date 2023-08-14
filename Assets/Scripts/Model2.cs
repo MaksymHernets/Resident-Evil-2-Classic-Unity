@@ -1,8 +1,11 @@
-﻿using System;
+﻿using OpenCover.Framework.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Model2
 {
@@ -204,8 +207,11 @@ public class Model2
     private static Mesh[] mesh(dataViewExt buf, int offset)
     {
         List<Vector3> vector3s = new List<Vector3>();
+        List<Vector3> vector3s2 = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();
+        Dictionary<int, Vector2> uv = new Dictionary<int, Vector2>();
         List<int> Triangles = new List<int>();
+        List<int> Triangles2 = new List<int>();
 
         int length    = buf.Ulong(offset);
         int uk        = buf.Ulong(offset + 4);
@@ -268,13 +274,21 @@ public class Model2
             offset += 56;
 
             vector3s.Clear();
+            vector3s2.Clear();
             normals.Clear();
             Triangles.Clear();
+            uv.Clear();
 
             for (int k = 0; k < vertex.Length; k += 4)
             {
                 Vector3 newvec = new Vector3(vertex[k] * -0.01f, vertex[k + 1] * -0.01f, vertex[k + 2] * -0.01f);
                 vector3s.Add(newvec);
+            }
+
+            for (int k = 0; k < vertex2.Length; k += 4)
+            {
+                Vector3 newvec = new Vector3(vertex2[k] * -0.01f, vertex2[k + 1] * -0.01f, vertex2[k + 2] * -0.01f);
+                vector3s2.Add(newvec);
             }
 
             for (int k = 0; k < normal.Length; k += 4)
@@ -283,33 +297,177 @@ public class Model2
                 normals.Add(newvec);
             }
 
+            Dictionary<int, int> newVector3s = new Dictionary<int, int>();
+            int maxVector = vector3s.Count;
+            //++maxVector;
+
+            Vector3Int param = GetTextureParams(buf.path);
+            int off_unit = param.x / param.z; //textureOffsetUnit 
+
             for (int k = 0; k < index.Length; k += 6)
             {
-                Triangles.Add(index[k + 1]);
-                Triangles.Add(index[k + 3]);
-                Triangles.Add(index[k + 5]);
+                int ui = k * 2;
+
+                TriangleTexture temp = new TriangleTexture();
+
+                byte[] bytes = new byte[2];
+
+                temp.U0 = tex[ui + 0];
+                temp.V0 = tex[ui + 1];
+                bytes[0] = Convert.ToByte(tex[ui + 2]);
+                bytes[1] = Convert.ToByte(tex[ui + 3]);
+                temp.ClutId = BitConverter.ToUInt16(bytes);
+
+                temp.U1 = tex[ui + 4];
+                temp.V1 = tex[ui + 5];
+                bytes[0] = Convert.ToByte(tex[ui + 6]);
+                bytes[1] = Convert.ToByte(tex[ui + 7]);
+                temp.Page = BitConverter.ToUInt16(bytes);
+
+                temp.U2 = tex[ui + 8];
+                temp.V2 = tex[ui + 9];
+                bytes[0] = Convert.ToByte(tex[ui + 10]);
+                bytes[1] = Convert.ToByte(tex[ui + 11]);
+                temp.Zero = BitConverter.ToUInt16(bytes);
+
+                int x = GetNewVertex(index[k + 1]);
+                int y = GetNewVertex(index[k + 3]);
+                int z = GetNewVertex(index[k + 5]);
+
+                uv.Add(x, buildTextureUV(temp.U0, temp.V0, temp.Page, param));
+                uv.Add(y, buildTextureUV(temp.U1, temp.V1, temp.Page, param));
+                uv.Add(z, buildTextureUV(temp.U2, temp.V2, temp.Page, param));
+                //Triangles.Add(index[k + 1]);
+                //Triangles.Add(index[k + 3]);
+                //Triangles.Add(index[k + 5]);
             }
 
             for (int k = 0; k < index2.Length; k += 8)
             {
-                Triangles.Add(index2[k + 1]);
-                Triangles.Add(index2[k + 3]);
-                Triangles.Add(index2[k + 7]);
+                int ui = k * 2;
+
+                QuadTexture temp = new QuadTexture();
+
+                byte[] bytes = new byte[2];
+
+                temp.U0 = tex2[ui + 0];
+                temp.V0 = tex2[ui + 1];
+                bytes[0] = Convert.ToByte(tex2[ui + 2]);
+                bytes[1] = Convert.ToByte(tex2[ui + 3]);
+                temp.ClutId = BitConverter.ToUInt16(bytes);
+
+                temp.U1 = tex2[ui + 4];
+                temp.V1 = tex2[ui + 5];
+                bytes[0] = Convert.ToByte(tex2[ui + 6]);
+                bytes[1] = Convert.ToByte(tex2[ui + 7]);
+                temp.Page = BitConverter.ToUInt16(bytes);
+
+                temp.U2 = tex2[ui + 8];
+                temp.V2 = tex2[ui + 9];
+                bytes[0] = Convert.ToByte(tex2[ui + 10]);
+                bytes[1] = Convert.ToByte(tex2[ui + 11]);
+                temp.Zero1 = BitConverter.ToUInt16(bytes);
+
+                temp.U3 = tex2[ui + 12];
+                temp.V3 = tex2[ui + 13];
+                bytes[0] = Convert.ToByte(tex2[ui + 14]);
+                bytes[1] = Convert.ToByte(tex2[ui + 15]);
+                temp.Zero2 = BitConverter.ToUInt16(bytes);
+
+                int x = GetNewVertex(index2[k + 1]);
+                int y = GetNewVertex(index2[k + 3]);
+                int q2 = GetNewVertex(index2[k + 7]);
+                int x2 = GetNewVertex(index2[k + 1]);
+                int q = GetNewVertex(index2[k + 7]);
+                int z = GetNewVertex(index2[k + 5]);
+
+                uv.Add(x, buildTextureUV(temp.U0, temp.V0, temp.Page, param));
+                uv.Add(y, buildTextureUV(temp.U1, temp.V1, temp.Page, param));
+                uv.Add(q2, buildTextureUV(temp.U3, temp.V3, temp.Page, param));
+                uv.Add(x2, buildTextureUV(temp.U0, temp.V0, temp.Page, param));
+                uv.Add(z, buildTextureUV(temp.U2, temp.V2, temp.Page, param));
+                uv.Add(q, buildTextureUV(temp.U3, temp.V3, temp.Page, param));
                 
-                Triangles.Add(index2[k + 1]);
-                Triangles.Add(index2[k + 7]);
-                Triangles.Add(index2[k + 5]);
+                //Triangles.Add(index2[k + 1]);
+                //Triangles.Add(index2[k + 3]);
+                //Triangles.Add(index2[k + 7]);
+                //Triangles.Add(index2[k + 1]);
+                //Triangles.Add(index2[k + 7]);
+                //Triangles.Add(index2[k + 5]);
             }
 
-            mesh.vertices = vector3s.ToArray();
-            if ( normals.Count <= vector3s.Count ) mesh.normals = normals.ToArray();
+            int GetNewVertex(int index)
+            {
+                if (newVector3s.ContainsValue(index))
+                {
+                    newVector3s.Add(maxVector, index);
+                    Triangles.Add(maxVector);
+                    ++maxVector;
+                    return maxVector - 1;
+                }
+                else
+                {
+                    newVector3s.Add(index, index);
+                    Triangles.Add(index);
+                    return index;
+                }
+            }
+
+            Vector2 buildTextureUV(float u, float v, int texturePage, Vector3 textureData)
+            {
+                var textureCoordOffset = off_unit * (texturePage & 3);
+                var newU = (u + textureCoordOffset) / (textureData[0]);
+                var newV = (v) / (textureData[1]);
+                return new Vector2(newU, newV);
+            }
+
+            for (int ii = 0; ii < vector3s.Count; ii++)
+            {
+                if (!newVector3s.ContainsValue(ii))
+                {
+                    newVector3s.Add(ii, ii);
+                }
+            }
+
+            List<Vector3> luist = new List<Vector3>();
+            List<Vector3> newnormals = new List<Vector3>();
+            List<Vector2> uvs = new List<Vector2>();
+
+            if (normals.Count == vector3s.Count)
+            {
+                for (int zz = 0; zz < maxVector; zz++)
+                {
+                    luist.Add(vector3s[newVector3s[zz]]);
+                    newnormals.Add(normals[newVector3s[zz]]);
+                    uvs.Add(uv[zz]);
+                }
+            }
+            else
+            {
+                for (int zz = 0; zz < maxVector; zz++)
+                {
+                    luist.Add(vector3s[newVector3s[zz]]);
+                    uvs.Add(uv[zz]);
+                }
+            }
+            
+
+            //foreach (var newVector3 in newVector3s)
+            //{
+            //    luist.Add(vector3s[newVector3.Value]);
+            //}
+
+            mesh.vertices = luist.ToArray();
+            mesh.normals = newnormals.ToArray();
+            //if (newnormals.Count <= vector3s.Count ) mesh.normals = newnormals.ToArray();
 
             mesh.SetTriangles(Triangles, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateTangents();
-            var uvss = GetUVs(buf, vector3s, index, index2, tex, tex2 );
-            mesh.SetUVs(0, uvss[0].ToArray());
-            mesh.SetUVs(1, uvss[1].ToArray());
+            //var uvss = GetUVs(buf, vector3s, vector3s2, index, index2, tex, tex2 );
+            mesh.SetUVs(0, uvs.ToArray());
+            //mesh.SetUVs(1, uvss[0].ToArray());
+            //mesh.SetIndices(new int[1], Me )
             //mesh.SetUVs(1, uv2.ToArray());
             meshObj.Add(mesh);
         }
@@ -317,7 +475,7 @@ public class Model2
         return meshObj.ToArray();
     }
 
-    public static List<List<Vector2>> GetUVs(dataViewExt buf, List<Vector3> vector3s, int[] index, int[] index2, int[] tex, int[] tex2)
+    public static List<List<Vector2>> GetUVs(dataViewExt buf, List<Vector3> vector3s, List<Vector3> vector3s2, int[] index, int[] index2, int[] tex, int[] tex2)
     {
         List<List<Vector2>> uvss = new List<List<Vector2>>();
         List<Vector2> uv = new List<Vector2>();
@@ -327,65 +485,187 @@ public class Model2
 
         Dictionary<int, Vector2> uvs = new Dictionary<int, Vector2>();
         Dictionary<int, Vector2> uvs2 = new Dictionary<int, Vector2>();
-        int off_unit = param.x / param.z;
+        Dictionary<int, Vector2> uvs3 = new Dictionary<int, Vector2>();
+        int off_unit = param.x / param.z; //textureOffsetUnit 
+        //var textureOffsetUnit = float32(textureData.ImageWidth) / float32(textureData.NumPalettes)
 
-        for (int k = 0; k < index.Length - 1; k += 6)
+        List<TriangleTexture> uvv1 = new List<TriangleTexture>();
+
+        for (int k = 0; k < index.Length; k += 6)
         {
             int ui = k * 2;
 
-            Vector2 x = GetUV(param, ui);
-            Vector2 y = GetUV(param, ui + 4);
-            Vector2 z = GetUV(param, ui + 8);
+            TriangleTexture temp = new TriangleTexture();
 
-            Vector2 x1 = new Vector2(Mathf.Abs(1 - x.x), Mathf.Abs(1 - x.y));
-            Vector2 y1 = new Vector2(Mathf.Abs(1 - y.x), Mathf.Abs(1 - y.y));
-            Vector2 z1 = new Vector2(Mathf.Abs(1 - z.x), Mathf.Abs(1 - z.y));
+            byte[] bytes = new byte[2];
 
-            //uvs.TryAdd(index[k + 1], x);
-            //uvs.TryAdd(index[k + 3], z);
-            //uvs.TryAdd(index[k + 5], z1);
+            temp.U0 = tex[ui + 0];
+            temp.V0 = tex[ui + 1];
+            bytes[0] = Convert.ToByte(tex[ui + 2]);
+            bytes[1] = Convert.ToByte(tex[ui + 3]);
+            temp.ClutId = BitConverter.ToUInt16(bytes);
 
-            uvs.TryAdd(index[k + 1], x);
-            uvs.TryAdd(index[k + 3], y);
-            uvs.TryAdd(index[k + 5], z);
+            temp.U1 = tex[ui + 4];
+            temp.V1 = tex[ui + 5];
+            bytes[0] = Convert.ToByte(tex[ui + 6]);
+            bytes[1] = Convert.ToByte(tex[ui + 7]);
+            temp.Page = BitConverter.ToUInt16(bytes);
+
+            temp.U2 = tex[ui + 8];
+            temp.V2 = tex[ui + 9];
+            bytes[0] = Convert.ToByte(tex[ui + 10]);
+            bytes[1] = Convert.ToByte(tex[ui + 11]);
+            temp.Zero = BitConverter.ToUInt16(bytes);
+
+            if (uvs.ContainsKey(index[k + 1]))
+            {
+                if (uvs2.ContainsKey(index[k + 1]))
+                {
+                    uvs3.TryAdd(index[k + 1], buildTextureUV(temp.U0, temp.V0, temp.Page, param));
+                }
+                else
+                {
+                    uvs2.TryAdd(index[k + 1], buildTextureUV(temp.U0, temp.V0, temp.Page, param));
+                }
+            }
+            else
+            {
+                uvs.TryAdd(index[k + 1], buildTextureUV(temp.U0, temp.V0, temp.Page, param));
+            }
+
+            if (uvs.ContainsKey(index[k + 3]))
+            {
+                if (uvs2.ContainsKey(index[k + 3]))
+                {
+                    uvs3.TryAdd(index[k + 3], buildTextureUV(temp.U1, temp.V1, temp.Page, param));
+                }
+                else
+                {
+                    uvs2.TryAdd(index[k + 3], buildTextureUV(temp.U1, temp.V1, temp.Page, param));
+                }
+            }
+            else
+            {
+                uvs.TryAdd(index[k + 3], buildTextureUV(temp.U1, temp.V1, temp.Page, param));
+            }
+
+            if (uvs.ContainsKey(index[k + 5]))
+            {
+                if (uvs2.ContainsKey(index[k + 5]))
+                {
+                    uvs3.TryAdd(index[k + 5], buildTextureUV(temp.U2, temp.V2, temp.Page, param));
+                }
+                else
+                {
+                    uvs2.TryAdd(index[k + 5], buildTextureUV(temp.U2, temp.V2, temp.Page, param));
+                }
+            }
+            else
+            {
+                uvs.TryAdd(index[k + 5], buildTextureUV(temp.U2, temp.V2, temp.Page, param));
+            }
+            //uvs.TryAdd(index[k + 3], buildTextureUV(temp.U1, temp.V1, temp.Page, param));
+            //uvs.TryAdd(index[k + 1], buildTextureUV(temp.U0, temp.V0, temp.Page, param));   
         }
 
-        for (int k = 0; k < index2.Length - 1; k += 8)
+        List<QuadTexture> uvv2 = new List<QuadTexture>();
+
+        for (int k = 0; k < index2.Length; k += 8)
         {
             int ui = k * 2;
 
-            Vector2 x = GetUV2(param, ui);
+            QuadTexture temp = new QuadTexture();
 
-            Vector2 y = GetUV2(param, ui + 4);
-            Vector2 z = GetUV2(param, ui + 8);
-            Vector2 q = GetUV2(param, ui + 12);
+            byte[] bytes = new byte[2];
 
-            uvs.TryAdd(index2[k + 1], x);
-            uvs.TryAdd(index2[k + 3], y);
-            uvs.TryAdd(index2[k + 5], q);
-            uvs.TryAdd(index2[k + 7], z);
+            temp.U0 = tex2[ui + 0];
+            temp.V0 = tex2[ui + 1];
+            bytes[0] = Convert.ToByte(tex2[ui + 2]);
+            bytes[1] = Convert.ToByte(tex2[ui + 3]);
+            temp.ClutId = BitConverter.ToUInt16(bytes);
 
-            
+            temp.U1 = tex2[ui + 4];
+            temp.V1 = tex2[ui + 5];
+            bytes[0] = Convert.ToByte(tex2[ui + 6]);
+            bytes[1] = Convert.ToByte(tex2[ui + 7]);
+            temp.Page = BitConverter.ToUInt16(bytes);
 
-            //uvs.TryAdd(index2[k + 1], x);
-            //uvs.TryAdd(index2[k + 5], z);
-            //uvs.TryAdd(index2[k + 7], q);
+            temp.U2 = tex2[ui + 8];
+            temp.V2 = tex2[ui + 9];
+            bytes[0] = Convert.ToByte(tex2[ui + 10]);
+            bytes[1] = Convert.ToByte(tex2[ui + 11]);
+            temp.Zero1 = BitConverter.ToUInt16(bytes);
+
+            temp.U3 = tex2[ui + 12];
+            temp.V3 = tex2[ui + 13];
+            bytes[0] = Convert.ToByte(tex2[ui + 14]);
+            bytes[1] = Convert.ToByte(tex2[ui + 15]);
+            temp.Zero2 = BitConverter.ToUInt16(bytes);
+
+            if (uvs.ContainsKey(index2[k + 1]))
+            {
+                uvs2.TryAdd(index2[k + 1], buildTextureUV(temp.U0, temp.V0, temp.Page, param));
+            }
+            else
+            {
+                uvs.TryAdd(index2[k + 1], buildTextureUV(temp.U0, temp.V0, temp.Page, param));
+            }
+
+            if (uvs.ContainsKey(index2[k + 3]))
+            {
+                uvs2.TryAdd(index2[k + 3], buildTextureUV(temp.U1, temp.V1, temp.Page, param));
+            }
+            else
+            {
+                uvs.TryAdd(index2[k + 3], buildTextureUV(temp.U1, temp.V1, temp.Page, param));
+            }
+
+            if (uvs.ContainsKey(index2[k + 5]))
+            {
+                uvs2.TryAdd(index2[k + 5], buildTextureUV(temp.U2, temp.V2, temp.Page, param));
+            }
+            else
+            {
+                uvs.TryAdd(index2[k + 5], buildTextureUV(temp.U2, temp.V2, temp.Page, param));
+            }
+
+            if (uvs.ContainsKey(index2[k + 7]))
+            {
+                uvs2.TryAdd(index2[k + 7], buildTextureUV(temp.U3, temp.V3, temp.Page, param));
+            }
+            else
+            {
+                uvs.TryAdd(index2[k + 7], buildTextureUV(temp.U3, temp.V3, temp.Page, param));
+            }
+
+            //uvs.TryAdd(index2[k + 7], buildTextureUV(temp.U3, temp.V3, temp.Page, param));
+            //uvs.TryAdd(index2[k + 5], buildTextureUV(temp.U2, temp.V2, temp.Page, param));
+            //uvs.TryAdd(index2[k + 3], buildTextureUV(temp.U1, temp.V1, temp.Page, param));
+            //uvs.TryAdd(index2[k + 1], buildTextureUV(temp.U0, temp.V0, temp.Page, param));
         }
 
         Vector2 GetUV(Vector3Int param, int uii)
         {
-            int offx = off_unit * (tex[uii + 3] & 3);
+            int offx = off_unit * (tex[uii + 6] & 3); //textureCoordOffset 
             float u = (float)(tex[uii] + offx) / (float)param.x;
-            float v = (float)(tex[uii + 1]) / (float)param.y;
+            float v = (float)(tex[uii+1]) / (float)param.y;
             return new Vector2(u, v);
         }
 
         Vector2 GetUV2(Vector3Int param, int uii)
         {
-            //int offx = off_unit * (tex2[uii + 3] & 3);
-            float u = (float)(tex2[uii] + 0) / (float)param.x;
+            int offx = off_unit * (tex2[uii + 61] & 3); //textureCoordOffset 
+            float u = (float)(tex2[uii] + offx) / (float)param.x;
             float v = (float)(tex2[uii + 1]) / (float)param.y;
             return new Vector2(u, v);
+        }
+
+        Vector2 buildTextureUV(float u , float v ,int texturePage, Vector3 textureData)  
+        {
+            var textureCoordOffset = off_unit * (texturePage & 3);
+            var newU = (u + textureCoordOffset) / (textureData[0]);
+            var newV = (v) / (textureData[1]);
+            return new Vector2 (newU, newV);
         }
 
         Debug.Log(vector3s.Count.ToString() + " " + uvs.Count().ToString());
@@ -397,7 +677,7 @@ public class Model2
             }
             else
             {
-                uv.Add(new Vector2());
+                uv.Add(new Vector2(0f, 0f));
             }
         }
 
@@ -409,7 +689,7 @@ public class Model2
             }
             else
             {
-                uv2.Add(new Vector2());
+                uv2.Add(new Vector2(0f, 0f));
             }
         }
 
@@ -465,3 +745,70 @@ public class Model2
         //Debug.Log(message);
     }
 }
+
+class Vector6
+{
+    public Vector2 x;
+    public Vector2 y;
+    public Vector2 z;
+
+    public Vector6(Vector2 x, Vector2 y, Vector2 z)
+    {
+        this.x = x; this.y = y; this.z = z;
+    }
+
+    public override string ToString()
+    {
+        string sep = ", ";
+        return x.x.ToString("0.00") + sep + x.y.ToString("0.00") + sep + y.x.ToString("0.00") + sep + y.y.ToString("0.00") + sep + z.x.ToString("0.00") + sep + z.y.ToString("0.00");
+    }
+}
+
+class Vector8
+{
+    public Vector2 x;
+    public Vector2 y;
+    public Vector2 z;
+    public Vector2 q;
+
+    public Vector8(Vector2 x, Vector2 y, Vector2 z, Vector2 q)
+    {
+        this.x = x; this.y = y; this.z = z; this.q = q;
+    }
+
+    public override string ToString()
+    {
+        string sep = ", ";
+        return x.x.ToString("0.00") + sep + x.y.ToString("0.00") + sep + y.x.ToString("0.00") + sep + y.y.ToString("0.00") + sep + z.x.ToString("0.00") + sep + z.y.ToString("0.00") + sep + q.x.ToString("0.00") + sep + q.y.ToString("0.00");
+    }
+}
+
+class TriangleTexture
+{
+    public int U0; // uint8 // UV coordinates for vertex 0
+    public int V0; // uint8
+    public int ClutId; // uint16 // Texture clut id, bits 0-5
+    public int U1; // uint8  // UV coordinates for vertex 1
+    public int V1; // uint8
+    public int Page; // uint16 // Texture page
+    public int U2; // uint8  // UV coordinates for vertex 2
+    public int V2; // uint8
+    public int Zero; // uint16
+}
+
+class QuadTexture
+{
+    public int U0; // uint8 // UV coordinates for vertex 0
+    public int V0; // uint8
+    public int ClutId; // uint16 // Texture clut id, bits 0-5
+    public int U1; // uint8  // UV coordinates for vertex 1
+    public int V1; // uint8
+    public int Page; // uint16 // Texture page
+    public int U2; // uint8  // UV coordinates for vertex 2
+    public int V2; // uint8
+    public int Zero1; // uint16
+    public int U3; // uint8  // UV coordinates for vertex 3
+    public int V3; // uint8
+    public int Zero2; // uint16
+}
+

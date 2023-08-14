@@ -101,4 +101,23 @@ public static class tool
         }
         return "";
     }
+
+    //public bool inRange(Vector4 r, Vector4 x, Vector4 y)
+    //{
+    //    // const w = who.where();
+    //    // const x = w[0], y = w[2];
+    //    int a, b, c, d;
+
+    //    a = (r.x2 - r.x1) * (y - r.y1) - (r.y2 - r.y1) * (x - r.x1);
+    //    b = (r.x3 - r.x2) * (y - r.y2) - (r.y3 - r.y2) * (x - r.x2);
+    //    c = (r.x4 - r.x3) * (y - r.y3) - (r.y4 - r.y3) * (x - r.x3);
+    //    d = (r.x1 - r.x4) * (y - r.y4) - (r.y1 - r.y4) * (x - r.x4);
+
+    //    if ((a > 0 && b > 0 && c > 0 && d > 0) ||
+    //        (a < 0 && b < 0 && c < 0 && d < 0))
+    //    {
+    //        return true;
+    //    }
+    //    return false;
+    //}
 }

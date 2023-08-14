@@ -12,16 +12,22 @@ public class ImportOriginAssets : MonoBehaviour
         for (int i = startId; i <= endId; i++)
         {
             Living living0 = Liv.fromEmd(0, i);
-            SaveData.CheckFolderPLS(living0.playId, living0.emdId);
-            string path = "Assets/EMD" + living0.playId + "/EM" + "_" + living0.playId + living0.emdId;
-            if (living0 == null) Debug.LogWarning(path);
-            else SaveData.SaveMD(living0.md, path);
+
+            if (living0 != null)
+            {
+                SaveData.CheckFolderPLS(living0.playId, living0.emdId);
+                string path = "Assets/EMD" + living0.playId + "/EM" + "_" + living0.playId + living0.emdId;
+                SaveData.SaveMD(living0.md, path);
+
+            }
 
             Living living1 = Liv.fromEmd(1, i);
-            SaveData.CheckFolderPLS(living1.playId, living1.emdId);
-            path = "Assets/EMD" + living1.playId + "/EM" + "_" + living1.playId + living1.emdId;
-            if (living0 == null) Debug.LogWarning(path);
-            else SaveData.SaveMD(living1.md, path);
+            if (living0 != null)
+            {
+                SaveData.CheckFolderPLS(living1.playId, living1.emdId);
+                string path = "Assets/EMD" + living1.playId + "/EM" + "_" + living1.playId + living1.emdId;
+                SaveData.SaveMD(living1.md, path);
+            }
         }
     }
 

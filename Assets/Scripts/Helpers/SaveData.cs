@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Windows;
 
 public static class SaveData
 {
@@ -98,6 +99,12 @@ public static class SaveData
             AssetDatabase.SaveAssetIfDirty(material);
             AssetDatabase.CreateAsset(material, pathMat);
         }
+
+        byte[] bytes = tempTexture.EncodeToJPG();
+        string pathPng = path + ".jpg";
+
+        // For testing purposes, also write to a file in the project folder
+        File.WriteAllBytes(pathPng, bytes);
     }
 
     private static string CheckFolderEMD(int playId, string emdId)
