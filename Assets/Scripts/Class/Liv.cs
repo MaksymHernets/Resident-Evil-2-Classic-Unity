@@ -60,6 +60,8 @@ public static class Liv
         //console.debug("Load EMD", emdfile, '-', texfile);
         MD mod = Model2.emd(emdfile);
 
+        mod.playId = playId;
+        mod.emdId = emdId;
         living.md = mod;
 
         if (File.Exists("Assets/" + texfile) == false) return living;
@@ -75,7 +77,9 @@ public static class Liv
 
         if (File.Exists("Assets/" + file) == false) return null;
 
-        var mod = Model2.pld(file);
+        MD mod = Model2.pld(file);
+        mod.playId = playId;
+        //mod.emdId = emdId;
         console.debug("Load PLD", file);
 
         string path2 = SaveData.CheckFolderPLS(playId, tool.b2(_modid));

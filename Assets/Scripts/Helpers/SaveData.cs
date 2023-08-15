@@ -1,27 +1,76 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Windows;
 
 public static class SaveData
 {
     public static void SaveMD(MD mod, string key, bool IsRecreateAsset = true)
     {
         int index = 0;
+        int newindex = 0;
+        List<Mesh> meshAssets = new List<Mesh>(); 
         foreach (Mesh mesh in mod.meshs)
         {
             string namePart = Enum.GetName(typeof(person), (person)index);
             if (string.IsNullOrEmpty(namePart))
             {
-                namePart = UnityEngine.Random.Range(0, 10).ToString();
+                namePart = newindex.ToString();
+                ++newindex;
             }
-            string path =  key + "/" + namePart + ".mesh";
+            string path = key + "/" + namePart + ".mesh";
 
             SaveData.SaveMesh(mesh, path, IsRecreateAsset);
+            meshAssets.Add( AssetDatabase.LoadAssetAtPath<Mesh>(path));
             index++;
         }
+
+        List<GameObject> components = new List<GameObject>();
+        GameObject mainGameObject = default(GameObject);
+
+        string pathMaterial= key + "/" + mod.emdId + ".mat";
+        Material mainMaterial = AssetDatabase.LoadAssetAtPath<Material>(pathMaterial);
+
+        string[] namesBones = Enum.GetNames(typeof(person));
+
+        foreach (Mesh mesh in meshAssets)
+        {
+            GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            gameObject.GetComponent<MeshFilter>().mesh = mesh;
+            gameObject.GetComponent<MeshRenderer>().sharedMaterial = mainMaterial;
+            gameObject.name = mesh.name;
+            components.Add(gameObject);
+            //if ( )
+        }
+
+        index = 0;
+        foreach (SkeletonBone sk in mod.bone)
+        {
+            if (index >= components.Count)
+            {
+                break;
+            }
+            if (sk.parent == null)
+            {
+                mainGameObject = components[index];
+            }
+            GameObject currentObject = components[index];
+            currentObject.transform.localPosition = -sk._pos * 0.01f;
+            foreach (var child in sk.child)
+            {
+                components[child.idx].transform.SetParent(currentObject.transform, false);
+            }
+            ++index;
+        }
+
+        string pathPrefab = key + "/" + mod.emdId + ".prefab";
+        PrefabUtility.SaveAsPrefabAsset(mainGameObject, pathPrefab);
+        //SaveData.SavePrefab(mainGameObject, pathPrefab);
     }
+
     public static void SaveMesh(Mesh mesh, string path, bool IsRecreateAsset = true)
     {
         if (AssetDatabase.LoadAssetAtPath<Mesh>(path) != null)
@@ -53,6 +102,18 @@ public static class SaveData
         else
         {
             AssetDatabase.CreateAsset(mesh, path);
+        }
+    }
+
+    public static void SavePrefab(GameObject gameObject, string path)
+    {
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(path) != null)
+        {
+            GameObject temp = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+        else
+        {
+            AssetDatabase.CreateAsset(gameObject, path);
         }
     }
 
