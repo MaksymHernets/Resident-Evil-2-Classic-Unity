@@ -281,13 +281,13 @@ public class Model2
 
             for (int k = 0; k < vertex.Length; k += 4)
             {
-                Vector3 newvec = new Vector3(vertex[k] * -0.01f, vertex[k + 1] * -0.01f, vertex[k + 2] * -0.01f);
+                Vector3 newvec = new Vector3(vertex[k] * -0.001f, vertex[k + 1] * -0.001f, vertex[k + 2] * -0.001f);
                 vector3s.Add(newvec);
             }
 
             for (int k = 0; k < vertex2.Length; k += 4)
             {
-                Vector3 newvec = new Vector3(vertex2[k] * -0.01f, vertex2[k + 1] * -0.01f, vertex2[k + 2] * -0.01f);
+                Vector3 newvec = new Vector3(vertex2[k] * -0.001f, vertex2[k + 1] * -0.001f, vertex2[k + 2] * -0.001f);
                 vector3s2.Add(newvec);
             }
 

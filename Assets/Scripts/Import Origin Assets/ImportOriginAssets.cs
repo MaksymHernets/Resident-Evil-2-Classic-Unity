@@ -7,26 +7,26 @@ public class ImportOriginAssets : MonoBehaviour
     [MenuItem("Resident Evil/Import Models")]
     public static void ImportModels()
     {
-        int startId = 30;
-        int endId = 89;
+        int startId = 16;
+        int endId = 90;
         for (int i = startId; i <= endId; i++)
         {
             Living living0 = Liv.fromEmd(0, i);
 
             if (living0 != null)
             {
-                SaveData.CheckFolderPLS(living0.playId, living0.emdId);
+                SaveData.CheckFolderEMD(living0.playId, living0.emdId);
                 string path = "Assets/EMD" + living0.playId + "/EM" + "_" + living0.playId + living0.emdId;
-                SaveData.SaveMD(living0.md, path);
+                SaveData.SaveMD(living0.md, path, false);
 
             }
 
             Living living1 = Liv.fromEmd(1, i);
-            if (living0 != null)
+            if (living1 != null)
             {
-                SaveData.CheckFolderPLS(living1.playId, living1.emdId);
+                SaveData.CheckFolderEMD(living1.playId, living1.emdId);
                 string path = "Assets/EMD" + living1.playId + "/EM" + "_" + living1.playId + living1.emdId;
-                SaveData.SaveMD(living1.md, path);
+                SaveData.SaveMD(living1.md, path, false);
             }
         }
     }
@@ -34,9 +34,9 @@ public class ImportOriginAssets : MonoBehaviour
     [MenuItem("Resident Evil/Import Model Test")]
     public static void ImportModelTest()
     {
-        Living living1 = Liv.fromEmd(1, 0x4B);
+        Living living1 = Liv.fromEmd(0, 0x4B);
 
-        SaveData.CheckFolderPLS(living1.playId, living1.emdId);
+        SaveData.CheckFolderEMD(living1.playId, living1.emdId);
         string path = "Assets/EMD" + living1.playId + "/EM" + "_" + living1.playId + living1.emdId;
 
         SaveData.SaveMD(living1.md, path, false);
@@ -47,7 +47,7 @@ public class ImportOriginAssets : MonoBehaviour
     {
         Living living1 = Liv.fromEmd(1, 0x1E);
 
-        SaveData.CheckFolderPLS(living1.playId, living1.emdId);
+        SaveData.CheckFolderEMD(living1.playId, living1.emdId);
         string path = "Assets/EMD" + living1.playId + "/EM" + "_" + living1.playId + living1.emdId;
 
         SaveData.SaveMD(living1.md, path, false);
@@ -56,8 +56,8 @@ public class ImportOriginAssets : MonoBehaviour
     [MenuItem("Resident Evil/Import Textures")]
     public static void ImportTextures()
     {
-        int startId = 30;
-        int endId = 89;
+        int startId = 16;
+        int endId = 90;
         string path;
         for (int i = startId; i <= endId; i++)
         {
@@ -80,7 +80,7 @@ public class ImportOriginAssets : MonoBehaviour
     {
         Living living1 = Liv.fromTim(1, 0x4B);
 
-        SaveData.CheckFolderPLS(living1.playId, living1.emdId);
+        SaveData.CheckFolderEMD(living1.playId, living1.emdId);
         string path = "Assets/EMD" + living1.playId + "/EM" + "_" + living1.playId + living1.emdId + "/" + living1.emdId;
 
         SaveData.SaveTexture2D(living1.tex, path);
@@ -89,7 +89,7 @@ public class ImportOriginAssets : MonoBehaviour
     [MenuItem("Resident Evil/Import PLDs")]
     public static void ImportPLDs()
     {
-        int startId = 10;
+        int startId = 16;
         int endId = 90;
         for (int i = startId; i <= endId; i++)
         {

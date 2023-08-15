@@ -58,7 +58,7 @@ public static class SaveData
                 mainGameObject = components[index];
             }
             GameObject currentObject = components[index];
-            currentObject.transform.localPosition = -sk._pos * 0.01f;
+            currentObject.transform.localPosition = -sk._pos * 0.001f;
             foreach (var child in sk.child)
             {
                 components[child.idx].transform.SetParent(currentObject.transform, false);
@@ -168,7 +168,7 @@ public static class SaveData
         File.WriteAllBytes(pathPng, bytes);
     }
 
-    private static string CheckFolderEMD(int playId, string emdId)
+    public static string CheckFolderEMD(int playId, string emdId)
     {
         string folderEMD = "Assets/EMD" + playId;
         if (AssetDatabase.IsValidFolder(folderEMD) == false)
