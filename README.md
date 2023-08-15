@@ -3,7 +3,9 @@
 To import assets, you need to use a specific version of the game, namely 'Resident Evil 2 PC-1998 Rebirth'
 It must be placed in the project in the source game folder.
 
-![screen](https://github.com/MaksymHernets/Resident-Evil-2-Classic-Unity/blob/master/Screenshots/Screenshot%202023-08-14%20224920.png)
+![screen](https://github.com/MaksymHernets/Resident-Evil-2-Classic-Unity/blob/master/Screenshots/Screenshot%202023-08-15%20140257.png)
+
+![screen](https://github.com/MaksymHernets/Resident-Evil-2-Classic-Unity/blob/master/Screenshots/Screenshot%202023-08-15%20140442.png)
 
 # TODO list
 
@@ -13,8 +15,9 @@ It must be placed in the project in the source game folder.
   * [x] Triangles;
   * [X] UV;
   * [x] Load texture for model;
-  * [ ] Load skeleton and setup bones
+  * [X] Load skeleton and setup bones
   * [ ] Animations
+  * [ ] Optimization
 * [ ] load map
   * [ ] occlusion layer
   * [ ] occlusion layer is at the correct depth
