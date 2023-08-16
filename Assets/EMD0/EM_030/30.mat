@@ -44,7 +44,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: d6c9a426b84006b4887f61e5305f5bf4, type: 2}
+        m_Texture: {fileID: 2800000, guid: 903a57374c8a8454c8706019750e9967, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
