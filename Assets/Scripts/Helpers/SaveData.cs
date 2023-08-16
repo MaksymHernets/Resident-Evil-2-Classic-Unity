@@ -119,30 +119,39 @@ public static class SaveData
 
     public static void SaveTexture2D(Texture2D texture, string path, bool CreateMaterial = true, bool IsRecreateAsset = true)
     {
-        string pathTex = path + ".asset";
-        Texture2D tempTexture = default(Texture2D);
+        //string pathTex = path + ".asset";
+        //Texture2D tempTexture = default(Texture2D);
 
-        if (AssetDatabase.LoadAssetAtPath<Texture2D>(pathTex) != null)
-        {
-            tempTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(pathTex);
+        //if (AssetDatabase.LoadAssetAtPath<Texture2D>(pathTex) != null)
+        //{
+        //    tempTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(pathTex);
 
-            tempTexture.Reinitialize(texture.width, texture.height, texture.format, false);
-            for (int i = 0; i < texture.width; i++)
-            {
-                for (int j = 0; j < texture.height; j++)
-                {
-                    tempTexture.SetPixel(i,j, texture.GetPixel(i, j));
-                }
-            }
-            tempTexture.Apply();
-            AssetDatabase.SaveAssetIfDirty(tempTexture);
-        }
-        else
-        {
-            tempTexture = texture;
-            AssetDatabase.CreateAsset(texture, pathTex);
-        }
+        //    tempTexture.Reinitialize(texture.width, texture.height, texture.format, false);
+        //    for (int i = 0; i < texture.width; i++)
+        //    {
+        //        for (int j = 0; j < texture.height; j++)
+        //        {
+        //            tempTexture.SetPixel(i, j, texture.GetPixel(i, j));
+        //        }
+        //    }
+        //    tempTexture.Apply();
+        //    AssetDatabase.SaveAssetIfDirty(tempTexture);
+        //}
+        //else
+        //{
+        //    tempTexture = texture;
+        //    AssetDatabase.CreateAsset(texture, pathTex);
+        //}
 
+        byte[] bytes = texture.EncodeToPNG();
+        string pathPng = path + ".png";
+
+        // For testing purposes, also write to a file in the project folder
+        File.WriteAllBytes(pathPng, bytes);
+    }
+
+    public static void SaveMaterial(Texture2D texture, string path)
+    {
         Shader shader = Shader.Find("Standard (Specular setup)");
         string pathMat = path + ".mat";
 
@@ -150,22 +159,16 @@ public static class SaveData
         {
             Material temp = AssetDatabase.LoadAssetAtPath<Material>(pathMat);
             temp.shader = shader;
-            temp.SetTexture("_MainTex", tempTexture);
+            temp.SetTexture("_MainTex", texture);
             AssetDatabase.SaveAssetIfDirty(temp);
         }
         else
         {
             Material material = new Material(shader);
-            material.SetTexture("_MainTex", tempTexture);
+            material.SetTexture("_MainTex", texture);
             AssetDatabase.SaveAssetIfDirty(material);
             AssetDatabase.CreateAsset(material, pathMat);
         }
-
-        byte[] bytes = tempTexture.EncodeToJPG();
-        string pathPng = path + ".jpg";
-
-        // For testing purposes, also write to a file in the project folder
-        File.WriteAllBytes(pathPng, bytes);
     }
 
     public static string CheckFolderEMD(int playId, string emdId)
